@@ -26,62 +26,87 @@ $text = str_replace( "&#126" ,"",$text); //물결표시
 // &인 경우 쉼표로 바꿔주기
 $text = str_replace( "&#38" ,",",$text);
 
-// 쉼표가 포함되어 있는 경우
-if (strlen(stristr($text,","))>0){
-	// 쉽표 기준 잘라서 배열로 저장하기
-		$f_item = explode(",",$text);
-		
-		for($a=0;$a<(count($f_item));$a++){		
-			// 아이템 앞 뒤 공백 제거하기
-			$f_item[$a] = trim($f_item[$a]);
-			// 문자열 중 숫자만 추출하여 섭취량으로 저장
-			$f_number[$a] = return_number($f_item[$a]);
-			// 문자열 중 숫자 나오기 전까지 잘라내서 음식명으로 저장
-			$f_name[$a] = substr($f_item[$a],0,strrpos($f_item[$a],$f_number[$a]));
-			// 문자열 중 숫자 다음부터 잘라내서 단위로 저장
-			$f_unit[$a] = strrchr($f_item[$a],$f_number[$a]);
-			$f_unit[$a] = mb_substr($f_unit[$a],1,(strlen(f_unit[$a]-1)),'utf-8');
-			
-		}
+// 전체 스트링에 숫자가 포함되었는지 검사	
+for($f=0;$f<strlen($text);$f++){
+	$char = mb_substr($text,$f,1);
+	if(is_numeric($char)){
+		$case = "have number";
+		echo "숫자 있다";
+		break;
+	}
+	$case = "don't have number";
 }
-// 쉼표가 포함되지 않은 경우
-else {
-	$f_item = array();
-	$f_name = array();
-	$f_number = array();
-	$f_unit = array();
 
-	//더 이상 스트링 내에 숫자가 없을 때까지 반복
-	for($k=0;$k<strlen($text);$k++){
-		
-		//문자열 중 숫자 나오기 전까지 잘라내서 음식명으로 저장
-		for($i=0;$i<strlen($text);$i++){
-			$char = mb_substr($text,$i,1);
-			if(is_numeric($char)){
-				array_push($f_name,trim(mb_substr($text,0,($i-1))));
-				$text = mb_substr($text,$i,strlen($text));
-				break;
-			}
+
+switch ($case) {
+// 스트링에 숫자가 있는 경우
+  case "have number"  : 
+		// 쉼표가 포함되어 있는 경우
+		if (strlen(stristr($text,","))>0){
+			// 쉽표 기준 잘라서 배열로 저장하기
+				$f_item = explode(",",$text);
+				
+				for($a=0;$a<(count($f_item));$a++){		
+					// 아이템 앞 뒤 공백 제거하기
+					$f_item[$a] = trim($f_item[$a]);
+					// 문자열 중 숫자만 추출하여 섭취량으로 저장
+					$f_number[$a] = return_number($f_item[$a]);
+					// 문자열 중 숫자 나오기 전까지 잘라내서 음식명으로 저장
+					$f_name[$a] = substr($f_item[$a],0,strrpos($f_item[$a],$f_number[$a]));
+					// 문자열 중 숫자 다음부터 잘라내서 단위로 저장
+					$f_unit[$a] = strrchr($f_item[$a],$f_number[$a]);
+					$f_unit[$a] = mb_substr($f_unit[$a],1,(strlen(f_unit[$a]-1)),'utf-8');
+					
+				}
 		}
-		
-		//나머지 문자열 중 첫번째 공백이 나오기 전까지 잘라내기
-		for($j=0;$j<strlen($text);$j++){
-			$char = mb_substr($text,$j,1);
-			if($char == " "){
-				$cache = mb_substr($text,0,$j);
-				// 숫자만 추출해서 섭취량 배열에 집어넣기
-				array_push($f_number,return_number($cache));		
-				$text = mb_substr($text,$j,strlen($text));
-				break;
-			}
-		}		
-		if(is_numeric(mb_substr($text,0,1))){
-			array_push($f_number,mb_substr($text,0,1));
-			break;	
-		} 
-	} 
-		
+		// 쉼표가 포함되지 않은 경우
+		else {
+			$f_item = array();
+			$f_name = array();
+			$f_number = array();
+			$f_unit = array();
+
+			//더 이상 스트링 내에 숫자가 없을 때까지 반복
+			for($k=0;$k<strlen($text);$k++){
+				
+				//문자열 중 숫자 나오기 전까지 잘라내서 음식명으로 저장
+				for($i=0;$i<strlen($text);$i++){
+					$char = mb_substr($text,$i,1);
+					if(is_numeric($char)){
+						array_push($f_name,trim(mb_substr($text,0,($i-1))));
+						$text = mb_substr($text,$i,strlen($text));
+						break;
+					}
+				}
+				
+				//나머지 문자열 중 첫번째 공백이 나오기 전까지 잘라내기
+				for($j=0;$j<strlen($text);$j++){
+					$char = mb_substr($text,$j,1);
+					if($char == " "){
+						$cache = mb_substr($text,0,$j);
+						// 숫자만 추출해서 섭취량 배열에 집어넣기
+						array_push($f_number,return_number($cache));		
+						$text = mb_substr($text,$j,strlen($text));
+						break;
+					}
+				}		
+				if(is_numeric(mb_substr($text,0,1))){
+					array_push($f_number,mb_substr($text,0,1));
+					break;	
+				} 
+			} 
+				
+		}
+   break;
+  // 스트링에 숫자가 없는 경우
+  case "don't have number"  : 
+  			 print "숫자 없음.<br>";
+               break;
+  default    : print "그냥 디폴트<br />\n";
+               break;
 }
+
+
 
 
 function return_number($string){
