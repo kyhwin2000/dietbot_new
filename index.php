@@ -7,8 +7,8 @@
 
 	<body> 
 		what do you eat?
-		<form method="POST" accept-charset="utf-8" action="practice.php">
-			음식명 : <input type="text" name="text" />
+		<form name="myform" method="POST" action="test.php">
+			음식명 : <input type="textfield" name="text" />
 			<input type = "submit" value = "제출" />
 		</form>
 	</body>
