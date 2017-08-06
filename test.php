@@ -124,7 +124,29 @@ switch ($case) {
  					}
  					$text = str_replace($data['food_Name'],"",$text);
 				}	
-				
+
+				//curl 테스트
+				$json_data = json_encode(explode(",",$text),JSON_UNESCAPED_UNICODE);
+				//echo($json_data);
+				$url = "http://220.230.115.39/units.php";
+				$ch = curl_init($url);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+                          'Content-Type: application/json', 
+                          'Content-Length: '.strlen($json_data)));
+				curl_setopt($ch, CURLOPT_URL, $url); 
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");  // 이건 아래 옵션 때문에 필요 없긴 하다.
+				curl_setopt($ch, CURLOPT_POST, 1); 
+
+				$output = curl_exec($ch); 
+				$result = json_decode($output, true);
+				echo($result);
+
+				// 단위 테이블에 있는 문자열이 있으면 단위로 저장하고 해당 문자 제거
+				if(strpos($text,"개")!==false){
+					$text = str_replace("개","",$text);
+				}
 				echo($text);
 				echo "<BR>";
 
