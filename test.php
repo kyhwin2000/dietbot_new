@@ -117,38 +117,42 @@ switch ($case) {
 				$result=mysqli_query($db, $query);
 				// 결과값 배열로 저장하며 검색 결과가 원문과 동일한 문자열일 경우 음식명으로 저장한 뒤 삭제하여 단위와 숫자만 남기기
 				while($data = mysqli_fetch_array($result)){
- 					echo $data['food_Name']." : ".$data['score'];
- 					echo "<BR>";
+ 					//echo $data['food_Name']." : ".$data['score'];
+ 					//echo "<BR>";
  					if(strpos($text,$data['food_Name'])!==false){
  						array_push($f_name,$data['food_Name']);
  					}
  					$text = str_replace($data['food_Name'],"",$text);
 				}	
 
-				//curl 테스트
-				$json_data = json_encode(explode(",",$text),JSON_UNESCAPED_UNICODE);
-				//echo($json_data);
+				//남은 텍스트를 json 형태로 변환
+				$rest = array();
+				$rest['string'] = $text;
+				//print_r($rest);
+				$json_data = json_encode($rest,JSON_UNESCAPED_UNICODE);
+				print_r($json_data);
+				 
+				//curl 활용 남은 텍스트 units.php로 보내기
 				$url = "http://220.230.115.39/units.php";
-				$ch = curl_init($url);
-				curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                          'Content-Type: application/json', 
-                          'Content-Length: '.strlen($json_data)));
-				curl_setopt($ch, CURLOPT_URL, $url); 
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-				curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
-				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");  // 이건 아래 옵션 때문에 필요 없긴 하다.
-				curl_setopt($ch, CURLOPT_POST, 1); 
+	  			$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $url);
+					curl_setopt($ch, CURLOPT_POST, 1);
+					curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/x-www-form-urlencoded', 'Content-Type: application/json; charset=UTF-8'));
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				$response =curl_exec($ch);
+				
+				$decode = json_decode($response,true);
+				print_r($decode);
 
-				$output = curl_exec($ch); 
-				$result = json_decode($output, true);
-				echo($result);
+				curl_close($ch);
 
 				// 단위 테이블에 있는 문자열이 있으면 단위로 저장하고 해당 문자 제거
-				if(strpos($text,"개")!==false){
-					$text = str_replace("개","",$text);
-				}
-				echo($text);
-				echo "<BR>";
+				//if(strpos($text,"개")!==false){
+				//	$text = str_replace("개","",$text);
+				//}
+				//echo($text);
+				//echo "<BR>";
 
 				//for ($e=0;$e<count($data);$e++){
 				//	$data[$e] = 
@@ -175,8 +179,8 @@ switch ($case) {
 */
 
 // 확인해보기
-print_r($f_item);
-echo '<BR>';
+//print_r($f_item);
+//echo '<BR>';
 echo '음식명은 ';
 print_r($f_name);
 echo '<BR>';
