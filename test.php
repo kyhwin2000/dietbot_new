@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title> result page </title>
+	<title> basic parsing </title>
 </head>
 <body>
 
@@ -125,26 +125,20 @@ switch ($case) {
  					$text = str_replace($data['food_Name'],"",$text);
 				}	
 
-				//남은 텍스트를 json 형태로 변환
-				$rest = array();
-				$rest['string'] = $text;
-				//print_r($rest);
-				$json_data = json_encode($rest,JSON_UNESCAPED_UNICODE);
-				print_r($json_data);
-				 
-				//curl 활용 남은 텍스트 units.php로 보내기
+				//남은 텍스트(단위와 숫자)를 json 형태로 변환하여 curl로 units.php로 보내기
+				$json_data = json_encode($text);
 				$url = "http://220.230.115.39/units.php";
 	  			$ch = curl_init();
-					curl_setopt($ch, CURLOPT_URL, $url);
-					curl_setopt($ch, CURLOPT_POST, 1);
-					curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
-					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/x-www-form-urlencoded', 'Content-Type: application/json; charset=UTF-8'));
-					curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($ch, CURLOPT_URL, $url);
+				curl_setopt($ch, CURLOPT_POST, 1);
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $json_data);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/x-www-form-urlencoded', 'Content-Type: application/json; charset=UTF-8'));
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 				$response =curl_exec($ch);
-				
-				$decode = json_decode($response,true);
-				print_r($decode);
-
+				//if (curl_errno($ch)) { 
+  			 	//	print curl_error($ch); 
+				//} 
+				print_r($response);
 				curl_close($ch);
 
 				// 단위 테이블에 있는 문자열이 있으면 단위로 저장하고 해당 문자 제거
