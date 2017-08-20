@@ -7,7 +7,10 @@
 <body>
 
 <?php
+
 $text = $_POST['text'];
+
+global $f_item, $f_name, $f_number, $f_unit;
 
 $f_item = array();
 $f_name = array();
@@ -35,16 +38,17 @@ $text = str_replace( "&" ,",",$text);
 for($f=0;$f<strlen($text);$f++){
 	$char = mb_substr($text,$f,1);
 	if(is_numeric($char)){
-		$case = "have number";
+		$case = "numeric";
 		break;
 	}
-	$case = "don't have number";
+	$case = "string";
 }
 
 
 switch ($case) {
 // 스트링에 숫자가 있는 경우
-  case "have number"  : 
+  case "numeric"  : 
+  		echo "숫자가 있는 케이스!<BR>";
 		// 쉼표가 포함되어 있는 경우
 		if (strlen(stristr($text,","))>0){
 			// 쉽표 기준 잘라서 배열로 저장하기
@@ -99,7 +103,9 @@ switch ($case) {
 
 
   // 스트링에 숫자가 없는 경우
-  case "don't have number"  : 
+  case "string"  : 
+  				echo "숫자가 없는 케이스!<BR>";
+
   				// DB에 연결
 	    		$hostname = 'localhost';
 				$username = 'root';
@@ -108,26 +114,27 @@ switch ($case) {
 
 				$db = new mysqli($hostname,$username,$password,$dbname);
 				if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
-				// 풀텍스트 검색
+				// 유사한 음식명이 있는지 풀텍스트 검색
 				mysqli_query($db,"set names utf8");   
 				$query = "SELECT food_Name, MATCH (food_Name)
     						AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
     						FROM foodCal WHERE MATCH (food_Name) AGAINST
     						('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
 				$result=mysqli_query($db, $query);
-				// 결과값 배열로 저장하며 검색 결과가 원문과 동일한 문자열일 경우 음식명으로 저장한 뒤 삭제하여 단위와 숫자만 남기기
+				// 검색 결과가 원문과 동일한 문자열이 있으면 음식명으로 저장
 				while($data = mysqli_fetch_array($result)){
- 					//echo $data['food_Name']." : ".$data['score'];
- 					//echo "<BR>";
  					if(strpos($text,$data['food_Name'])!==false){
- 						array_push($f_name,$data['food_Name']);
+ 						array_push($f_name,$data['food_Name']);	//음식명 저장
  					}
- 					$text = str_replace($data['food_Name'],"",$text);
+ 					$text = str_replace($data['food_Name'],"",$text);	//음식명 삭제해서 단위랑 숫자만 남기기
 				}	
 
-				//남은 텍스트(단위와 숫자)를 json 형태로 변환하여 curl로 units.php로 보내기
-				$json_data = json_encode($text);
+				//남은 텍스트(단위와 숫자)를 json 형태로 변환
+				$json_data = json_encode($text);			
+
 				$url = "http://220.230.115.39/units.php";
+	  			
+				//남은 텍스트 units.php로 보내기
 	  			$ch = curl_init();
 				curl_setopt($ch, CURLOPT_URL, $url);
 				curl_setopt($ch, CURLOPT_POST, 1);
@@ -135,26 +142,35 @@ switch ($case) {
 				curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/x-www-form-urlencoded', 'Content-Type: application/json; charset=UTF-8'));
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 				$response =curl_exec($ch);
-				//if (curl_errno($ch)) { 
-  			 	//	print curl_error($ch); 
-				//} 
 				print_r($response);
-				curl_close($ch);
+				echo "<BR>";
+				// $json = json_decode(stripslashes($response));
+				$decode = json_decode($response,1);
+				var_dump($decode);
+				echo json_last_error_msg();
+				// array_push($f_number,$decode['f_number']);
+				// array_push($f_unit,$decode['f_unit']);
+				curl_close($ch);	
 
-				// 단위 테이블에 있는 문자열이 있으면 단위로 저장하고 해당 문자 제거
-				//if(strpos($text,"개")!==false){
-				//	$text = str_replace("개","",$text);
-				//}
-				//echo($text);
-				//echo "<BR>";
-
-				//for ($e=0;$e<count($data);$e++){
-				//	$data[$e] = 
-				//}
                break;
-  default    : print "그냥 디폴트<br />\n";
+
+  default    : 
+  				print "그냥 디폴트<br />\n";
                break;
 }
+
+
+
+echo '<BR>';
+echo '음식명은 ';
+print_r($f_name);
+echo '<BR>';
+echo '섭취량은 ';	
+print_r($f_number);
+echo '<BR>';	
+echo '단위는 ';
+print_r($f_unit);
+
 
 /*
 // DB에서 검색하기
@@ -174,15 +190,6 @@ switch ($case) {
 
 // 확인해보기
 //print_r($f_item);
-//echo '<BR>';
-echo '음식명은 ';
-print_r($f_name);
-echo '<BR>';
-echo '섭취량은 ';	
-print_r($f_number);
-echo '<BR>';	
-echo '단위는 ';
-print_r($f_unit);
 
 ?>
 
