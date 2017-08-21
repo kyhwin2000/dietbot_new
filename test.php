@@ -142,14 +142,12 @@ switch ($case) {
 				curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/x-www-form-urlencoded', 'Content-Type: application/json; charset=UTF-8'));
 				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 				$response =curl_exec($ch);
-				print_r($response);
-				echo "<BR>";
-				// $json = json_decode(stripslashes($response));
 				$decode = json_decode($response,1);
-				var_dump($decode);
-				echo json_last_error_msg();
-				// array_push($f_number,$decode['f_number']);
-				// array_push($f_unit,$decode['f_unit']);
+				// print_r($decode);
+				//echo json_last_error_msg();
+				
+				$f_number = $decode["f_number"];
+				$f_unit = $decode["f_unit"];
 				curl_close($ch);	
 
                break;

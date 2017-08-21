@@ -1,29 +1,6 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title> unit handling </title>
-</head>
-<body>
-
 <?php
 
 $json = file_get_contents("php://input");
-
-// This will remove unwanted characters.
-// Check http://www.php.net/chr for details
-for ($i = 0; $i <= 31; ++$i) { 
-    $json = str_replace(chr($i), "", $json); 
-}
-$json = str_replace(chr(127), "", $json);
-
-// This is the most common part
-// Some file begins with 'efbbbf' to mark the beginning of the file. (binary level)
-// here we detect it and we remove it, basically it's the first 3 characters 
-if (0 === strpos(bin2hex($json), 'efbbbf')) {
-   $json = substr($json, 3);
-}
-
 $decode = json_decode($json, true);
 $decode = trim($decode);
 // echo $decode;
@@ -65,7 +42,7 @@ for($k=0;$k<count($return_unit);$k++){
 		$r_unit[] = $return_unit[$k];	// 문자열이 있으면 저장
 	}	
 }
-// print_r($r_unit);
+
 // 한 단어씩 숫자명 매칭 여부 확인
 for($l=0;$l<$d_length;$l++){
 	$num = $data[$l];
@@ -81,23 +58,11 @@ for($n=0;$n<count($return_number);$n++){
 		$r_number[] = $return_number[$n];	// 문자열이 있으면 저장
 	}	
 }
-// print_r($r_number);
 
 $ru['f_unit'] = $r_unit;
 $ru['f_number'] = $r_number;
 
 $js_ru = json_encode($ru);
 echo $js_ru;
-
-
-// print_r($r_number);
-// print_r($return_unit);
-//$return_data = array_merge($return_unit,$return_number);
-//echo $return_data;
-// $return_json = json_encode($return_unit);
-// echo $return_json;
-// echo "<br>";
-// $return_json2 = json_encode($return_number);
-// echo $return_json2;
 
 ?>
