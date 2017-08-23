@@ -8,6 +8,7 @@
 
 <?php
 
+
 $text = $_POST['text'];
 
 global $f_item, $f_name, $f_number, $f_unit;
@@ -156,7 +157,6 @@ switch ($case) {
   				print "그냥 디폴트<br />\n";
                break;
 }
-
 
 
 echo '<BR>';
