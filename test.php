@@ -129,6 +129,7 @@ switch ($case) {
  					}
  					$text = str_replace($data['food_Name'],"",$text);	//음식명 삭제해서 단위랑 숫자만 남기기
 				}	
+				$mysqli->close($db);  //DB 접속 끊기   
 
 				//남은 텍스트(단위와 숫자)를 json 형태로 변환
 				$json_data = json_encode($text);			
@@ -158,7 +159,7 @@ switch ($case) {
                break;
 }
 
-
+/*
 echo '<BR>';
 echo '음식명은 ';
 print_r($f_name);
@@ -168,27 +169,65 @@ print_r($f_number);
 echo '<BR>';	
 echo '단위는 ';
 print_r($f_unit);
-
-
-/*
-// DB에서 검색하기
-		$db = mysql_connect("localhost", "kyhwin2000", "woosung13") or die (mysql_error()); 
-		mysql_select_db("kyhwin2000");
-		mysql_query("set names utf8");   
-		$j = 0;
-			$sql = "SELECT * FROM foodCal where food_Name like '.$f_name[$j].'";
-			$result=mysql_query($sql, $db);
-			$result_cal = mysql_result($result,0,'food_Cal');	
-			// 결과값 출력하기
-			echo($f_name[$j]).' '.($f_number[$j]).($f_unit[$j]);
-			echo(" is ");
-			echo($f_number[$j]*$result_cal);
-			echo(" Kcal");		
 */
 
-// 확인해보기
-//print_r($f_item);
+//쿼리에 공백이 들어가지 않게 트림해주기
 
+for($a=0;$a<count($f_name);$a++){
+	$f_name[$a] = trim($f_name[$a]);
+}
+
+// DB에서 검색하기
+$cal = array();
+$hostname = 'localhost';
+$username = 'root';
+$password = 'Dntjd13!';
+$dbname = 'dietbot';
+
+$db = new mysqli($hostname,$username,$password,$dbname);
+if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
+mysqli_query($db,"set names utf8");   
+
+// 음식 별 칼로리 결과값 불러오기
+for($i=0;$i<count($f_name);$i++){
+  $sql = "SELECT food_Cal FROM foodCal where food_Name like "."'$f_name[$i]'";
+  $result=mysqli_query($db, $sql);
+  $row = mysqli_fetch_array($result);
+  // print_r($row);
+  $cal[$i] = $f_number[$i]*$row['food_Cal'];  //1인분 칼로리와 수량 곱하기
+}
+
+$cal_total = array_sum($cal); //총 칼로리 계산
+$response = " ";
+
+for($j=0;$j<count($f_name);$j++){
+  $response .= "$f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
+}
+
+$response = "총 $cal_total 칼로리입니다!".$response ;
+
+//meals DB에 기록하기
+for($k=0;$k<count($f_name);$k++){
+	$meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal) VALUES ('userkey', 53, '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]')";
+	$record=mysqli_query($db, $meal_data);
+}
+
+$user_key = "yes";
+$query = "SELECT * from users where user_key like '$user_key'";
+$user_result=mysqli_query($db, $query);
+echo count($user_result);
+
+echo <<< EOD
+    {
+        "message": {
+            "text": "$response"
+        }
+    }    
+EOD;
+
+
+
+     
 ?>
 
 
