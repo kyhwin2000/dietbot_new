@@ -1,4 +1,5 @@
 <?php
+// 섭취량 숫자와 단위 파싱 부
 
 $json = file_get_contents("php://input");
 $decode = json_decode($json, true);

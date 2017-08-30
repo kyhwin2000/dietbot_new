@@ -1,4 +1,5 @@
 <?php
+//첫 채팅방 입장 시 띄워주는 키보
 header("Content-Type: application/json; charset=UTF-8");
 
 echo <<< EOD

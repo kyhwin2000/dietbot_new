@@ -1,5 +1,7 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
+// 사용자 입력 문장을 파싱하는 처리부(핵심)
+
 // 요청을 받아 저장
 $data = json_decode(file_get_contents('php://input'), true);
  
@@ -7,29 +9,75 @@ $data = json_decode(file_get_contents('php://input'), true);
 $text = $data["content"];
 $user_key = $data["user_key"];
 
+//유저 키가 이미 존재하는지 user db에서 검색
+$hostname = 'localhost';
+$username = 'root';
+$password = 'Dntjd13!';
+$dbname = 'dietbot';
+
+$db = new mysqli($hostname,$username,$password,$dbname);
+mysqli_query($db,"set names utf8");   
+if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
+$query = "SELECT * from users where user_key like '$user_key'"; 
+$result=mysqli_query($db, $query);
+$row=mysqli_fetch_array($result);
+
 // '먹은 음식 적기' 버튼 처리
-if($text == "먹은 음식 적기" )
-{
+if($text == "먹은 음식 적기" ){  
+// 신규 회원이면 설문 진행
+  if(count($row)<1){
+    $usr_query = "INSERT INTO users(user_key) VALUES ('$user_key')";  //먼저 유저 DB에 키값 집어넣기
+    mysqli_query($db,$usr_query);
 echo <<<EOD
-{
-    "message": {
-        "text": "무엇을 드셨나요? 고구마 1개, 바나나 2개와 같이 적어주세요!"
+  {
+        "message": { "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요. 성별이 어떻게 되시나요? (남자 또는 여자로 적어주세요) "},
+        "keyboard": {
+      "type": "buttons",
+      "buttons": [
+        "남자",
+        "여자"
+      ]
     }
-}
+  }
 EOD;
+  } 
+// 기존 회원이면 입력 받기
+  else {
+echo <<<EOD
+  {
+      "message": {
+          "text": "무엇을 드셨나요? 고구마 1개, 바나나 2개와 같이 적어주세요!"
+      }
+  }
+EOD;
+  }
 } 
+
+// 신규 회원인 경우 권장 열량 계산을 위한 성별,나이,키,몸무게,활동수준 정보 입력 받기
+elseif($text == "남자" or "여자") {
+  $gender_query = "INSERT INTO users(user_gender) VALUES ('$text')";  //성별 저장  
+  mysqli_query($db,$gender_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "넵. 초면에 죄송합니다만 나이, 키, 몸무게를 알려주세요 (26, 175, 72 이렇게 꼭 숫자만 적어주세요~!)"
+    }
+  }
+EOD;
+}
+
  
 // '도움말' 버튼 처리
-else if( $text == "도움말")
-{
+else if( $text == "도움말"){
 echo <<< EOD
     {
         "message": {
-            "text": "이제 곧 정식 버전이 출시될겁니다. 조금만 기다려주세요~!"
+            "text": "이렇게 말해 보세요~! 고구마 1개, 바나나 2개 or 오늘 통계 알려줘"
         }
     }    
 EOD;
 }
+
 // '안녕'이란 단어가 포함되었을때 처리
 else if( strpos($text, "안녕") !== false )
 {
@@ -41,9 +89,12 @@ echo <<< EOD
     }    
 EOD;
 }
+
+
+
 // 그밖의 문장일때 
 else
-{
+{ 
   global $f_item, $f_name, $f_number, $f_unit;
 
   $f_item = array();
@@ -191,8 +242,10 @@ else
     default    : 
             // print "그냥 디폴트<br />\n";
                  break;
-  }
+    }
 }
+
+  
 
 
 //쿼리에 공백이 들어가지 않게 트림해주기
