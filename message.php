@@ -79,7 +79,7 @@ EOD;
 // 나이 
 else if(strpos($text, "살") !== false){
     $age = preg_replace("/[^0-9]*/s", "", $text); //숫자만 뽑아내기 
-    $age_query = "INSERT INTO users(user_age) VALUES ('$age')";  //나이 저장
+    $age_query = "update users set user_age = '$age' where user_key = '$user_key'";  //나이 저장
     mysqli_query($db,$age_query);
 echo <<<EOD
   {
@@ -91,9 +91,10 @@ EOD;
 
   }
 
+//키
 else if(strpos($text, "센치") !== false){
     $height = preg_replace("/[^0-9]*/s", "", $text); 
-    $height_query = "INSERT INTO users(user_height) VALUES ('$height')";  //키 저장
+    $height_query = "update users set user_height = '$height' where user_key = '$user_key'";  //키 저장
     mysqli_query($db,$height_query);
 echo <<<EOD
   {
@@ -105,9 +106,10 @@ EOD;
 
   }
 
+//몸무게
 else if(strpos($text, "키로") !== false){
     $weight = preg_replace("/[^0-9]*/s", "", $text);
-    $weight_query = "INSERT INTO users(user_weight) VALUES ('$weight')";  //몸무게 저장
+    $weight_query = "update users set user_weight = '$weight' where user_key = '$user_key'";  //몸무게 저장
     mysqli_query($db,$weight_query);
 echo <<<EOD
   {
@@ -124,24 +126,32 @@ echo <<<EOD
     }
   }
 EOD;
+  }
+
+//활동 수준
+else if (strpos($text, "비활동적") !== false){
+    $activity = 1;  
+    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+    mysqli_query($db,$activity_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "수고하셨습니다!"
+    }
+  }
+EOD;
 }
 
-  // 성별 입력 시 나이 물어보기
-  else if($text == "남자" or "여자") {
-    $gender_query = "INSERT INTO users(user_gender) VALUES ('$text')";  //성별 저장  
-    mysqli_query($db,$gender_query);
-echo <<<EOD
-  {
-    "message" : {
-      "text" : "넵. 초면에 죄송합니다만 몇 살이세요? 예) 26살"
-    }
-  }
-EOD;
-  }
 
-  else if($text == "남자" or "여자") {
-    $gender_query = "INSERT INTO users(user_gender) VALUES ('$text')";  //성별 저장  
-    mysqli_query($db,$gender_query);
+// 성별
+else if($text == "남자" or "여자") {
+  if ($text == "남자"){
+    $gender = "M";
+  } else {
+    $gender = "F";
+  }
+  $gender_query = "update users set user_gender = '$gender' where user_key = '$user_key'";  //성별 저장  
+  mysqli_query($db,$gender_query);
 echo <<<EOD
   {
     "message" : {
@@ -149,8 +159,61 @@ echo <<<EOD
     }
   }
 EOD;
+}
+
+else if (strpos($text, "가벼운활동") !== false){
+    $activity = 2;  
+    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+    mysqli_query($db,$activity_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "수고하셨습니다!"
+    }
   }
-  
+EOD;
+}
+
+else if (strpos($text, "보통활동") !== false){
+    $activity = 3;  
+    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+    mysqli_query($db,$activity_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "수고하셨습니다!"
+    }
+  }
+EOD;    
+
+}
+
+else if (strpos($text, "적극적활동") !== false){
+    $activity = 4;  
+    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+    mysqli_query($db,$activity_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "수고하셨습니다!"
+    }
+  }
+EOD;    
+
+}
+else if (strpos($text, "운동선수") !== false){
+    $activity = 5;  
+    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+    mysqli_query($db,$activity_query);
+echo <<<EOD
+  {
+    "message" : {
+      "text" : "수고하셨습니다!"
+    }
+  }
+EOD;    
+
+} 
 
 
   // 그밖의 문장일때 
