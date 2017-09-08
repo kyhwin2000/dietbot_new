@@ -14,14 +14,6 @@ $dbname = 'dietbot';
 $db = new mysqli($hostname,$username,$password,$dbname);
 mysqli_query($db,"set names utf8");   
 if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
-$query = "SELECT * from users where user_key like '$user_key'";	
-$result=mysqli_query($db, $query);
-$row=mysqli_fetch_array($result);
-
-//유저 키가 존재하지 않는다면(신규 회원)
-if(count($row)<1){
-	$usr_query = "INSERT INTO users(user_key) VALUES ('$user_key')";	//먼저 유저 DB에 키값 집어넣기
-	mysqli_query($db,$usr_query);
-}
-
+$usr_query = "INSERT INTO users(user_key) VALUES ('$user_key')";	//유저 DB에 키값 집어넣기
+mysqli_query($db,$usr_query);
 ?>

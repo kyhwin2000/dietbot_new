@@ -18,6 +18,22 @@ $f_name = array();
 $f_number = array();
 $f_unit = array();
 
+//DB 연결
+$hostname = 'localhost';
+$username = 'root';
+$password = 'Dntjd13!';
+$dbname = 'dietbot';
+
+$db = new mysqli($hostname,$username,$password,$dbname);
+mysqli_query($db,"set names utf8");   
+if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
+$query = "SELECT user_gender,user_age,user_height,user_weight,user_activity from users where user_key like 'UYcMwWLfIPlw'"; 
+$result=mysqli_query($db, $query);
+$row=mysqli_fetch_array($result);
+
+echo($row['user_gender']);
+echo "<BR>";
+echo(in_array("0",$row));
 
 // 공백과 쉼표를 제외한 나머지 특수 문자 제거하기
 $text = str_replace( "<br/>","",$text); //줄바꿈
