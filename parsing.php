@@ -1,4 +1,4 @@
- <?php
+<?php
 $json = file_get_contents("php://input");
 $text = json_decode($json, true);
 

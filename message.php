@@ -2,12 +2,13 @@
 header("Content-Type: application/json; charset=UTF-8");
 // 사용자 입력 문장을 파싱하는 처리부(핵심)
 
-// 요청을 받아 저장
+// 요청을 받아 저장 (user_key와 type, content로 구성)
 $data = json_decode(file_get_contents('php://input'), true);
  
 // 받은 요청에서 content 항목 설정
 $text = $data["content"];
 $user_key = $data["user_key"];
+// $type = $data["type"];
 
 //DB 연결
 $hostname = 'localhost';
@@ -21,6 +22,7 @@ if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 $query = "SELECT * from users where user_key like '$user_key'"; 
 $result=mysqli_query($db, $query);
 $row=mysqli_fetch_array($result);
+$percent = $row['eat_calorie'] / $row['recommended_calorie']*100;
 
 // 성별 버튼 처리
 if($text == "남자" ){  
@@ -142,6 +144,24 @@ echo <<<EOD
 EOD;
 } 
  
+// '오늘의 통계' 버튼 처리
+else if( strpos($text, "통계") !== false ){
+//유저키랑 퍼센트 chart.php로 보내기
+// $url_chart = "http://220.230.115.39/chart.php?percent=".$percent;
+// $ch_chart = curl_init();
+// curl_setopt($ch_chart, CURLOPT_URL, $url_chart);
+// $res = curl_exec($ch_chart);
+// curl_close($ch_chart);
+
+echo <<< EOD
+  {
+  "message": {
+    "text": "http://220.230.115.39/chart.php?percent=$percent"
+    }
+  }    
+EOD;
+}
+
 // '도움말' 버튼 처리
 else if( $text == "도움말"){
 echo <<< EOD
@@ -188,13 +208,12 @@ $f_number = $decode["f_number"];
 $f_unit = $decode["f_unit"];
 curl_close($ch);  
 
-}
-
 //쿼리에 공백이 들어가지 않게 트림해주기
 for($a=0;$a<count($f_name);$a++){
   $f_name[$a] = trim($f_name[$a]);
 }
 
+$recommended_calorie = $row['recommended_calorie']; //권장 칼로리 미리 불러오기
 
 // DB에서 검색하기
 $cal = array();
@@ -218,6 +237,7 @@ for($i=0;$i<count($f_name);$i++){
 
 $cal_total = array_sum($cal); //총 칼로리 계산
 
+
 //응답 문장 만들기
 $response = " ";
 for($j=0;$j<count($f_name);$j++){
@@ -225,19 +245,26 @@ for($j=0;$j<count($f_name);$j++){
 }
 $response = "기록되었습니다! 총 $cal_total 칼로리입니다!".$response ;
 
-$remain_calorie = $row['recommended_calorie'] - $cal_total;
-
-$response = $response."오늘 $remain_calorie 칼로리 남으셨네요";
-
 $timestamp = date("Y-m-d H:i:s"); //현재 시각 저장하기
-
 //meals DB에 기록하기
 for($k=0;$k<count($f_name);$k++){
   $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$timestamp')";
   $record=mysqli_query($db02, $meal_data);
 }
+//user DB에 기록하기
+$add_eat = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
+mysqli_query($db02, $add_eat);
+
+//남은 칼로리 계산하기
+$remain_calorie = $row['recommended_calorie']-$row['eat_calorie'];
+$remain = "update users set remain_calorie = $remain_calorie where user_key = '$user_key'";
+mysqli_query($db02, $remain);
+
+$response = $response."오늘 $remain_calorie 칼로리 남으셨네요 (권장 열량 : $recommended_calorie)";
 
 mysqli_close($db02);
+
+//응답하기
 echo <<< EOD
     {
         "message": {
@@ -246,8 +273,7 @@ echo <<< EOD
     }    
 EOD;
 
-// $mysqli->close($db);  //DB 접속 끊기   
 
-
+}
 
 ?>
