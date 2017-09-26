@@ -22,7 +22,10 @@ if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 $query = "SELECT * from users where user_key like '$user_key'"; 
 $result=mysqli_query($db, $query);
 $row=mysqli_fetch_array($result);
-$percent = $row['eat_calorie'] / $row['recommended_calorie']*100;
+// $percent = $row['eat_calorie'] / $row['recommended_calorie']*100;
+$carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
+$protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
+$fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
 
 // 성별 버튼 처리
 if($text == "남자" ){  
@@ -146,17 +149,11 @@ EOD;
  
 // '오늘의 통계' 버튼 처리
 else if( strpos($text, "통계") !== false ){
-//유저키랑 퍼센트 chart.php로 보내기
-// $url_chart = "http://220.230.115.39/chart.php?percent=".$percent;
-// $ch_chart = curl_init();
-// curl_setopt($ch_chart, CURLOPT_URL, $url_chart);
-// $res = curl_exec($ch_chart);
-// curl_close($ch_chart);
 
 echo <<< EOD
   {
   "message": {
-    "text": "http://220.230.115.39/chart.php?percent=$percent"
+    "text": "http://220.230.115.39/chart.php?carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
     }
   }    
 EOD;
@@ -217,6 +214,10 @@ $recommended_calorie = $row['recommended_calorie']; //권장 칼로리 미리 �
 
 // DB에서 검색하기
 $cal = array();
+$carbo = array();
+$protein = array();
+$fat = array();
+
 $hostname02 = 'localhost';
 $username02 = 'root';
 $password02 = 'Dntjd13!';
@@ -237,6 +238,19 @@ for($i=0;$i<count($f_name);$i++){
 
 $cal_total = array_sum($cal); //총 칼로리 계산
 
+// 음식 별 영양소 결과값 불러오기
+for($h=0;$h<count($f_name);$h++){
+  $sql_h = "SELECT * FROM foodNutrient where food_Name like "."'$f_name[$h]'";
+  $result03=mysqli_query($db02, $sql_h);
+  $row03 = mysqli_fetch_array($result03);
+  $carbo[$h] = $f_number[$h]*$row03['Carbohydrate'];  //1인분 탄수화물과 수량 곱하기
+  $protein[$h] = $f_number[$h]*$row03['Protein'];  //1인분 단백질과 수량 곱하기
+  $fat[$h] = $f_number[$h]*$row03['Fat'];  //1인분 지방과 수량 곱하기
+}
+
+$carbo_total = array_sum($carbo); //총 탄수화물 계산
+$protein_total = array_sum($protein); //총 단백질 계산
+$fat_total = array_sum($fat); //총 지방 계산
 
 //응답 문장 만들기
 $response = " ";
@@ -251,9 +265,16 @@ for($k=0;$k<count($f_name);$k++){
   $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$timestamp')";
   $record=mysqli_query($db02, $meal_data);
 }
+
 //user DB에 기록하기
-$add_eat = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
-mysqli_query($db02, $add_eat);
+$add_Cal = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
+mysqli_query($db02, $add_Cal);
+$add_Carbo = "update users set eat_carbo = eat_carbo+$carbo_total where user_key = '$user_key'";
+mysqli_query($db02, $add_Carbo);
+$add_Protein = "update users set eat_protein = eat_protein+$protein_total where user_key = '$user_key'";
+mysqli_query($db02, $add_Protein);
+$add_Fat = "update users set eat_fat = eat_fat+$fat_total where user_key = '$user_key'";
+mysqli_query($db02, $add_Fat);
 
 //남은 칼로리 계산하기
 $remain_calorie = $row['recommended_calorie']-$row['eat_calorie'];

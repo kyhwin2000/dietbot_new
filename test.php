@@ -230,25 +230,70 @@ for($i=0;$i<count($f_name);$i++){
 }
 
 $cal_total = array_sum($cal); //총 칼로리 계산
+
+// 음식 별 영양소 결과값 불러오기
+for($h=0;$h<count($f_name);$h++){
+  $sql_h = "SELECT * FROM foodNutrient where food_Name like "."'$f_name[$h]'";
+  $result03=mysqli_query($db, $sql_h);
+  $row03 = mysqli_fetch_array($result03);
+  $carbo[$h] = $f_number[$h]*$row03['Carbohydrate'];  //1인분 탄수화물과 수량 곱하기
+  $protein[$h] = $f_number[$h]*$row03['Protein'];  //1인분 단백질과 수량 곱하기
+  $fat[$h] = $f_number[$h]*$row03['Fat'];  //1인분 지방과 수량 곱하기
+}
+
+// echo $f_name[0];
+
+// $test = "SELECT * FROM foodNutrient where food_Name like "."'$f_name[0]'";
+// $rst = mysqli_query($db02,$test);
+// // var_dump($rst);
+// $row_test = mysqli_fetch_array($rst);
+// $carbo[0] = $f_number[0]*$row_test['Carbohydrate'];
+
+// echo $carbo[0];
+
+$carbo_total = array_sum($carbo); //총 탄수화물 계산
+$protein_total = array_sum($protein); //총 단백질 계산
+$fat_total = array_sum($fat); //총 지방 계산
+
+echo $carbo_total;
+echo $protein_total;
+echo $fat_total;
+
+//응답 문장 만들기
 $response = " ";
 
 for($j=0;$j<count($f_name);$j++){
-  $response .= "$f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
+  $response .= " $f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
 }
+$response = "기록되었습니다! 총 $cal_total 칼로리입니다!".$response ;
 
-$response = "총 $cal_total 칼로리입니다!".$response ;
-
+$timestamp = date("Y-m-d H:i:s"); //현재 시각 저장하기
 //meals DB에 기록하기
 for($k=0;$k<count($f_name);$k++){
-	$meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal) VALUES ('userkey', 53, '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]')";
-	$record=mysqli_query($db, $meal_data);
+  $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$timestamp')";
+  $record=mysqli_query($db, $meal_data);
 }
 
-$user_key = "yes";
-$query = "SELECT * from users where user_key like '$user_key'";
-$user_result=mysqli_query($db, $query);
-echo count($user_result);
+//user DB에 기록하기
+$add_Cal = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
+mysqli_query($db, $add_Cal);
+$add_Carbo = "update users set eat_carbo = eat_carbo+$carbo_total where user_key = '$user_key'";
+mysqli_query($db, $add_Carbo);
+$add_Protein = "update users set eat_protein = eat_protein+$protein_total where user_key = '$user_key'";
+mysqli_query($db, $add_Protein);
+$add_Fat = "update users set eat_fat = eat_fat+$fat_total where user_key = '$user_key'";
+mysqli_query($db, $add_Fat);
 
+//남은 칼로리 계산하기
+$remain_calorie = $row['recommended_calorie']-$row['eat_calorie'];
+$remain = "update users set remain_calorie = $remain_calorie where user_key = '$user_key'";
+mysqli_query($db, $remain);
+
+$response = $response."오늘 $remain_calorie 칼로리 남으셨네요 (권장 열량 : $recommended_calorie)";
+
+mysqli_close($db);
+
+//응답하기
 echo <<< EOD
     {
         "message": {
@@ -256,7 +301,6 @@ echo <<< EOD
         }
     }    
 EOD;
-
 
 
      
