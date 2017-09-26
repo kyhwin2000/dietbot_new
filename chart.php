@@ -62,7 +62,7 @@
     // setTimeout( progress, 2000 );
   // } );
   $(document).ready(function(){ 
-    var s1 = [['탄수화물',$carbo_rate], ['단백질',$protein_rate], ['지방',$fat_rate]];
+    var s1 = [['탄수화물',<?=$carbo_rate?>], ['단백질',<?=$protein_rate?>], ['지방',<?=$fat_rate?>]];
          
     var plot8 = $.jqplot('pie8', [s1], {
         grid: {
