@@ -1,66 +1,43 @@
 <!DOCTYPE html>
 <head>
 <?php 
-  // $percent = $_GET['percent'];
+  $cal_rate = $_GET['cal_rate'];
   $carbo_rate = $_GET['carbo_rate'];
   $protein_rate = $_GET['protein_rate'];
   $fat_rate = $_GET['fat_rate'];
 ?>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>오늘의 통계</title>
-  <!-- // progress bar 표시를 위한 jquery-UI include -->
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <link rel="stylesheet" href="/jqueryui/jquery-ui.css">
-  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <!-- // pie chart 표시를 위한 jqplot include -->
-  <link class="include" rel="stylesheet" type="text/css" href="/jqplot/jquery.jqplot.min.css" />
-  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+  <!-- // bar, pie 표시를 위한 jqplot include -->
+  <script tupe="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script type="text/javascript" src="/jqplot/jquery.jqplot.js"></script>
+  <script type="text/javascript" src="/jqplot/plugins/jqplot.barRenderer.js"></script>
   <script type="text/javascript" src="/jqplot/plugins/jqplot.pieRenderer.js"></script>
-  <link rel="stylesheet" type="text/css" href="/jqplot/jquery.jqplot.css" />
-
-  <!-- <style>
-  .ui-progressbar {
-    position: relative;
-  }
-  .progress-label {
-    position: absolute;
-    left: 50%;
-    top: 4px;
-    font-weight: bold;
-    text-shadow: 1px 1px 0 #fff;
-  }
-  </style>
-   -->
+  <script type="text/javascript" src="/jqplot/plugins/jqplot.categoryAxisRenderer.js"></script>
+  <script type="text/javascript" src="/jqplot/plugins/jqplot.pointLabels.js"></script>
+  <!-- <link rel="stylesheet" type="text/css" href="/jqplot/jquery.jqplot.css" /> -->
+  <link class="include" rel="stylesheet" type="text/css" href="/jqplot/jquery.jqplot.min.css" />
+  
+  
   <script>
-  // // $( function() {
-  //   var progressbar = $( "#progressbar" ),
-  //     progressLabel = $( ".progress-label" );
- 
-  //   progressbar.progressbar({
-  //     value: <?=$percent?>,
-  //     change: function() {
-  //       progressLabel.text( progressbar.progressbar( "value" ) + "%" );
-  //     },
-  //     complete: function() {
-  //       progressLabel.text( "Complete!" );
-  //     }
-  //   });
- 
-  //   function progress() {
-  //     var val = progressbar.progressbar( "value" ) || 0;
- 
-  //     progressbar.progressbar( "value", val + 2 );
- 
-  //     if ( val < 99 ) {
-  //       setTimeout( progress, 80 );
-  //     }
-  //   }
- 
-    // setTimeout( progress, 2000 );
-  // } );
+  $(document).ready(function(){
+      $.jqplot('graph', [[['권장 칼로리', 100], ['섭취 칼로리', <?=$cal_rate?> ]]], {
+      title: '칼로리',
+      series:[{renderer:$.jqplot.BarRenderer}],
+      axes: {
+        xaxis: {
+          renderer: $.jqplot.CategoryAxisRenderer,
+          // label: "X 좌표제목"
+        },
+        yaxis: {
+          // label: "Y 좌표제목"
+        }
+      }
+    })
+    });
+
+
   $(document).ready(function(){ 
     var s1 = [['탄수화물',<?=$carbo_rate?>], ['단백질',<?=$protein_rate?>], ['지방',<?=$fat_rate?>]];
          
@@ -94,7 +71,10 @@
 
 <body> 
   <!-- <div id="progressbar"><div class="progress-label">Loading...</div></div> -->
-  <div id="pie8" style="width:300px; height:300px;"></div>
+  <div id="page">
+    <div id="graph" style="width:70%; height:15.0em;"></div>
+    <div id="pie8" style="width:300px; height:300px;"></div>
+  </div>
 </body>
 
 

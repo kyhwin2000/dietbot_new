@@ -22,83 +22,165 @@ if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 $query = "SELECT * from users where user_key like '$user_key'"; 
 $result=mysqli_query($db, $query);
 $row=mysqli_fetch_array($result);
-// $percent = $row['eat_calorie'] / $row['recommended_calorie']*100;
-$carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
-$protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
-$fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
 
-// 성별 버튼 처리
-if($text == "남자" ){  
-$gender_query = "update users set user_gender = 'M' where user_key = '$user_key'";  //성별 저장  
-mysqli_query($db,$gender_query);
+// 신규회원이면
+if($row['new'] == 'y' ){
+
+  $gender = $row['user_gender'];
+  $age = $row['user_age'];
+  $height = $row['user_height'];
+  $weight = $row['user_weight'];
+  $activity = $row['user_activity'];
+
+  // 아직 개인 정보 값이 비어 있으면 입력 받기
+  if ($gender == '0'){
 echo <<<EOD
-  {
-      "message": {
-          "text": "초면에 죄송합니다만 몇 살이세요? (36살 이렇게 꼭 적어주세요)"
+    {
+        "message": {
+            "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요. \\r\\n 성별, 나이, 키, 몸무게를 아래와 같이 써 주세요. (쉼표 꼭 붙여주세요) \\r\\n 예) 여, 24, 165, 70"
+        }
+    }
+EOD;
+  $gen_query = "update users set user_gender = 1 where user_key = '$user_key'";
+  mysqli_query($db,$gen_query);
+
+  } else {  // 아직 성별 및 다른 값들 입력 전이면
+      if($activity == '10'){
+        if($gender == "M"){   // 남자면
+          switch($text) {
+            case "비활동적(운동 거의 안 함)" : 
+              $activity = '1';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
+              $daily_cal *= 1.2;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "가벼운활동(가벼운 운동 - 주1~3회)" : 
+              $activity = '2';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
+              $daily_cal *= 1.375;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "보통활동(보통 - 주3~5회)" :
+              $activity = '3';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
+              $daily_cal *= 1.555;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "적극적활동(적극적으로 운동함 - 매일)" :
+              $activity = '4';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
+              $daily_cal *= 1.725;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "운동선수수준" :
+              $activity = '5';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
+              $daily_cal *= 1.9;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            }  
+echo <<<EOD
+      {
+        "message" : {
+          "text" : "알려주셔서 감사합니다. ^^ \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
+        }
       }
-  }
 EOD;
-} 
-
-else if($text == "여자" ){  
-$gender_query = "update users set user_gender = 'F' where user_key = '$user_key'";  //성별 저장  
-mysqli_query($db,$gender_query);
-echo <<<EOD
-  {
-      "message": {
-          "text": "초면에 죄송합니다만 몇 살이세요? (36살 이렇게 꼭 적어주세요)"
+              // 입력을 다 받고 나면 기존 회원으로 변경
+              $usr_update = "update users set new = 'n' where user_key = '$user_key'";
+              mysqli_query($db, $usr_update);
+      } else {  // 여자면
+          switch($text) {
+            case "비활동적(운동 거의 안 함)" : 
+              $activity = '1';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
+              $daily_cal *= 1.2;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "가벼운활동(가벼운 운동 - 주1~3회)" : 
+              $activity = '2';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
+              $daily_cal *= 1.375;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "보통활동(보통 - 주3~5회)" :
+              $activity = '3';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
+              $daily_cal *= 1.555;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "적극적활동(적극적으로 운동함 - 매일)" :
+              $activity = '4';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
+              $daily_cal *= 1.725;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            case "운동선수수준" :
+              $activity = '5';  
+              $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
+              mysqli_query($db,$activity_query);
+              $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
+              $daily_cal *= 1.9;
+              $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
+              mysqli_query($db,$cal_query);    
+              break;
+            }  
+  echo <<<EOD
+      {
+        "message" : {
+          "text" : "알려주셔서 감사합니다. ^^ \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
+        }
       }
-  }
 EOD;
-}
+              // 입력을 다 받고 나면 기존 회원으로 변경
+              $usr_update = "update users set new = 'n' where user_key = '$user_key'";
+              mysqli_query($db, $usr_update);
+        }
+      } else {  // activity 값이 10이 아니면 
+          // 쉽표 기준 잘라서 배열로 저장하기
+          $user_info = explode(",",$text);
+          for($a=0;$a<(count($user_info));$a++){   
+            // 앞 뒤 공백 제거하기
+            $user_info[$a] = trim($user_info[$a]);
+          }
+          if(strpos($user_info[0], "남") !== false){ 
+              $gender = "M";
+          } else {
+            $gender = "F";
+          }
+          $age = preg_replace("/[^0-9]*/s", "", $user_info[1]);
+          $height = preg_replace("/[^0-9]*/s", "", $user_info[2]);
+          $weight = preg_replace("/[^0-9]*/s", "", $user_info[3]);
+          $p_query = "update users set user_gender = '$gender', user_age = '$age', user_height = '$height', user_weight = '$weight' where user_key = '$user_key'";
+          mysqli_query($db,$p_query);
 
-else if($row['user_gender'] == "0"){
-echo <<<EOD
-  {
-        "message": { "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요. 성별이 어떻게 되시나요?"},
-        "keyboard": {
-      "type": "buttons",
-      "buttons": [
-        "남자",
-        "여자"
-      ]
-    }
-  }
-EOD;
-}
-
-//나이
-else if(strpos($text, "살") !== false){
-    $age = preg_replace("/[^0-9]*/s", "", $text); //숫자만 뽑아내기 
-    $age_query = "update users set user_age = '$age' where user_key = '$user_key'";  //나이 저장
-    mysqli_query($db,$age_query);
-echo <<<EOD
-  {
-    "message" : {
-      "text" : "아 넵, 키는 몇 센치세요? 예) 175센치"
-    }
-  }
-EOD;
-}
-
-//키
-else if(strpos($text, "센치") !== false){
-    $height = preg_replace("/[^0-9]*/s", "", $text); 
-    $height_query = "update users set user_height = '$height' where user_key = '$user_key'";  //키 저장
-    mysqli_query($db,$height_query);
-echo <<<EOD
-  {
-    "message" : {
-      "text" : "혹시 몸무게는 몇 키로그람이신가요? 예) 72키로"
-    }
-  }
-EOD;
-  }
-//몸무게
-else if(strpos($text, "키로") !== false){
-    $weight = preg_replace("/[^0-9]*/s", "", $text);
-    $weight_query = "update users set user_weight = '$weight' where user_key = '$user_key'";  //몸무게 저장
-    mysqli_query($db,$weight_query);
 echo <<<EOD
   {
         "message": { "text": "평소에 운동을 얼마나 하시는 편인가요?"},
@@ -114,30 +196,31 @@ echo <<<EOD
     }
   }
 EOD;
-  }
-
-//활동 수준
-else if (strpos($text, "비활동적") !== false){
-    $activity = 1;  
-    $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
-    mysqli_query($db,$activity_query);
-
-    $daily_cal = ($row['user_weight'] * 10) + ($row['user_height'] * 6.25) - ($row['user_age'] * 5) + 5;
-    $daily_cal *= 1.2;
-    $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
-    mysqli_query($db,$cal_query);    
-echo <<<EOD
-  {
-    "message" : {
-      "text" : "알려주셔서 감사합니다. ^^ \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
-    }
-  }
-EOD;
+          $act_query = "update users set user_activity = '10' where user_key = '$user_key'";
+          mysqli_query($db,$act_query);
+      }         
+  } 
 }
 
+// 기존 회원이면
+else {
+  //그래프를 만들기 위한 오늘의 칼로리, 영양소 값 조회
+  $cal_rate = $row['eat_calorie'] / $row['recommended_calorie']*100;
+  $carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
+  $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
+  $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
+
+  $f_query = "SELECT food_Name, MATCH (food_Name)
+                AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
+                FROM foodCal WHERE MATCH (food_Name) AGAINST
+                ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
+  $f_result=mysqli_query($db, $f_query);
+  $f_row = mysqli_fetch_array($f_result);      
+  // 음식명이 포함되지 않으면
+  if(count($f_row)<1){
 
 // '먹은 음식 적기' 버튼 처리
-else if($text == "먹은 음식 적기" ){  
+if($text == "먹은 음식 적기" ){  
 echo <<<EOD
   {
       "message": {
@@ -153,7 +236,7 @@ else if( strpos($text, "통계") !== false ){
 echo <<< EOD
   {
   "message": {
-    "text": "http://220.230.115.39/chart.php?carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
+    "text": "http://220.230.115.39/chart.php?cal_rate=$cal_rate&carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
     }
   }    
 EOD;
@@ -170,19 +253,10 @@ echo <<< EOD
 EOD;
 }
 
-// '안녕'이란 단어가 포함되었을때 처리
-else if( strpos($text, "안녕") !== false ){
-echo <<< EOD
-    {
-        "message": {
-            "text": "안녕하세요 저는 먹은 음식을 적으면 칼로리를 알려주는 다이어트 봇입니다. ^^"
-        }
-    }    
-EOD;
-}
-
-// 그밖의 문장일때
-else {
+  } 
+ 
+  // 음식명이 포함되면
+  else {
 //남은 텍스트(단위와 숫자)를 json 형태로 변환
 $json_data = json_encode($text);      
 
@@ -294,6 +368,7 @@ echo <<< EOD
     }    
 EOD;
 
+  }
 
 }
 

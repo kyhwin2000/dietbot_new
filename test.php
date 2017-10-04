@@ -67,6 +67,24 @@ $text = str_replace( "~" ,"",$text); //물결표시
 // &인 경우 쉼표로 바꿔주기
 $text = str_replace( "&" ,",",$text);
 
+$user_info = explode(",",$text);
+for($a=0;$a<(count($user_info));$a++){   
+// 앞 뒤 공백 제거하기
+$user_info[$a] = trim($user_info[$a]);
+}
+print_r($user_info);
+
+if(strpos($user_info[0], "남") !== false){ 
+  $gender = "M";
+} else {
+$gender = "F";
+}
+$age = preg_replace("/[^0-9]*/s", "", $user_info[1]);
+$height = preg_replace("/[^0-9]*/s", "", $user_info[2]);
+$weight = preg_replace("/[^0-9]*/s", "", $user_info[3]);
+$info_query = "update users set user_gender = '$gender', user_age = '$age', user_height = '$height', user_weight = '$weight'' where user_key = '$user_key'";
+mysqli_query($db,$info_query);
+
 // 전체 스트링에 숫자가 포함되었는지 검사	
 for($f=0;$f<strlen($text);$f++){
 	$char = mb_substr($text,$f,1);
