@@ -74,7 +74,7 @@ EOD;
               $daily_cal *= 1.555;
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
-              break;
+              break;  
             case "적극적활동(적극적으로 운동함 - 매일)" :
               $activity = '4';  
               $activity_query = "update users set user_activity = '$activity' where user_key='$user_key'";
@@ -210,12 +210,14 @@ else {
   $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
   $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
 
+  // 음식명 포함 여부를 보기 위해서 풀 텍스트 검색
   $f_query = "SELECT food_Name, MATCH (food_Name)
                 AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
                 FROM foodCal WHERE MATCH (food_Name) AGAINST
                 ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
   $f_result=mysqli_query($db, $f_query);
   $f_row = mysqli_fetch_array($f_result);      
+
   // 음식명이 포함되지 않으면
   if(count($f_row)<1){
 
@@ -334,13 +336,14 @@ for($j=0;$j<count($f_name);$j++){
 $response = "기록되었습니다! 총 $cal_total 칼로리입니다!".$response ;
 
 $timestamp = date("Y-m-d H:i:s"); //현재 시각 저장하기
-//meals DB에 기록하기
+
+//meals DB에 시간과 함께 기록하기
 for($k=0;$k<count($f_name);$k++){
   $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$timestamp')";
   $record=mysqli_query($db02, $meal_data);
 }
 
-//user DB에 기록하기
+//누적 칼로리, 영양소 user DB에 기록하기
 $add_Cal = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
 mysqli_query($db02, $add_Cal);
 $add_Carbo = "update users set eat_carbo = eat_carbo+$carbo_total where user_key = '$user_key'";
@@ -350,8 +353,10 @@ mysqli_query($db02, $add_Protein);
 $add_Fat = "update users set eat_fat = eat_fat+$fat_total where user_key = '$user_key'";
 mysqli_query($db02, $add_Fat);
 
-//남은 칼로리 계산하기
-$remain_calorie = $row['recommended_calorie']-$row['eat_calorie'];
+//남은 칼로리 계산해서 DB에 업로드하기
+$re_query = "select * from users where user_key='$user_key'";
+$row04 = mysqli_fetch_array(mysqli_query($db02,$re_query));
+$remain_calorie = $recommended_calorie-$row04['eat_calorie'];
 $remain = "update users set remain_calorie = $remain_calorie where user_key = '$user_key'";
 mysqli_query($db02, $remain);
 
