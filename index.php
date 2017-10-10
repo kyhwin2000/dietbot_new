@@ -14,7 +14,7 @@
 	</body>
 </html> -->
 <?php
-$text = "사과 1개 바나나 3개";
+$text = "고구마세개바나나2개";
 // print_r(parseText($text));
 $f_item = array();
 $f_name = array();
@@ -51,8 +51,8 @@ $pos = array();
 // DB와 매칭되는 음식명 문자열 위치 찾기
 while($f_row = mysqli_fetch_array($f_result)){
 	array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
-	// print_r($f_row);
-	// echo "<BR>";
+	print_r($f_row);
+	echo "<BR>";
 }      
 $pos = array_filter($pos,'is_numeric');
 sort($pos);	
@@ -123,9 +123,9 @@ function parseText($text){
     case "string" :
       // 문자열을 잘라내서 숫자 DB에 있는지 검사하여 섭취량 추출
       for($i=0;$i<strlen($text);$i++){
-      $val = mb_substr($text, 0, $i);
-      $query02 = "select * from numbers where n_Text = '$val'";
-      $row02 = mysqli_fetch_array(mysqli_query($db, $query02));
+      	$val = mb_substr($text, 0, $i);
+      	$query02 = "select * from numbers where n_Text = '$val'";
+      	$row02 = mysqli_fetch_array(mysqli_query($db, $query02));
         if(count($row02)>0){
           $number = $row02['n_Number'];
           $key_count = $i;

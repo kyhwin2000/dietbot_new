@@ -40,8 +40,6 @@ while($f_row = mysqli_fetch_array($f_result)){
 }      
 $pos = array_filter($pos,'is_numeric');
 sort($pos); 
-// print_r($pos);
-// echo("<BR>");
 
 // 음식명 문자열 위치부터 그 다음 음식명 문자열 위치까지 잘라서 아이템 분리하기
 for($q=0;$q<count($pos)-1;$q++){
@@ -49,18 +47,21 @@ for($q=0;$q<count($pos)-1;$q++){
 }
 array_push($f_item,mb_substr($text,$pos[count($pos)-1],strlen($text)-$pos[count($pos)-1]));
 
-// print_r($f_item);
-// echo("<BR>");
 // 한 아이템마다 함수에 던져서 음식명, 섭취량, 단위 추출하기
 for($r=0;$r<count($f_item);$r++){
   array_push($f_name,parseText($f_item[$r])[0]);
-  array_push($f_number,parseText($f_item[$r])[1]);
-  array_push($f_unit,parseText($f_item[$r])[2]);
+  if(parseText($f_item[$r])[1]==""){ 
+    array_push($f_number,'1');
+  } else {
+    array_push($f_number,parseText($f_item[$r])[1]);  
+  }
+  if(parseText($f_item[$r])[2]==""){ 
+    array_push($f_unit,'인분');
+  } else {
+    array_push($f_unit,parseText($f_item[$r])[2]);  
+  }
 }
 
-// print_r($f_name);
-// print_r($f_number);
-// print_r($f_unit);
 
 function parseText($text){
   //DB 연결
