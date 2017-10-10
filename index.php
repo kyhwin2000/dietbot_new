@@ -51,8 +51,10 @@ $pos = array();
 // DB와 매칭되는 음식명 문자열 위치 찾기
 while($f_row = mysqli_fetch_array($f_result)){
 	array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
+	// print_r($f_row);
+	// echo "<BR>";
 }      
-$pos = array_filter($pos);
+$pos = array_filter($pos,'is_numeric');
 sort($pos);	
 print_r($pos);
 echo("<BR>");
