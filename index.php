@@ -41,6 +41,20 @@ $text = str_replace( ";" ,"",$text); //세미콜론
 $text = str_replace( "^^" ,"",$text); //웃음표시
 $text = str_replace( "~" ,"",$text); //물결표시
 
+// 띄어쓰기 안 한 경우 공백 삽입
+$text = trim($text);
+if(strpos($text,' ') == false){
+	for($b=0;$b<strlen($text);$b++){
+      	$snip = mb_substr($text, 0, $b);
+      	$qry_snip = "select * from foodCal where food_Name = '$snip'";
+      	$row_snip = mysqli_fetch_array(mysqli_query($db, $qry_snip));
+        if(count($row_snip)>0){
+          $text = $snip." ".mb_substr($text,$b,strlen($text));
+          break;
+    	}
+	}
+}
+
 // 음식 DB에서 자연어 검색
 $f_query = "SELECT food_Name, MATCH (food_Name)
               AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score

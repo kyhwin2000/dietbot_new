@@ -249,9 +249,24 @@ else if( $text == "도움말"){
 echo <<< EOD
     {
         "message": {
-            "text": "이렇게 말해 보세요~! 고구마 1개, 바나나 2개 or 오늘 통계 알려줘"
+            "text": "이렇게 말해 보세요~! 고구마 1개, 바나나 2개 or 오늘 통계 or 버튼"
         }
     }    
+EOD;
+}
+
+// '버튼' 누르면 키보드 돌아오기
+else if($text == "버튼"){
+echo <<< EOD
+{
+  "message": {
+    "text": "아래 버튼을 눌러 보세요"
+  },
+  "keyboard": {
+      "type": "buttons",
+      "buttons": ["먹은 음식 적기", "통계", "도움말"]
+  }
+}
 EOD;
 }
 
@@ -335,11 +350,12 @@ for($j=0;$j<count($f_name);$j++){
 }
 $response = "기록되었습니다! 총 $cal_total 칼로리입니다!".$response ;
 
-$timestamp = date("Y-m-d H:i:s"); //현재 시각 저장하기
+$dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
+$time = $dateTime->format("Y-m-d H:i:s");
 
 //meals DB에 시간과 함께 기록하기
 for($k=0;$k<count($f_name);$k++){
-  $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$timestamp')";
+  $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$time')";
   $record=mysqli_query($db02, $meal_data);
 }
 
