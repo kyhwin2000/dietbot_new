@@ -92,56 +92,35 @@ function parseText($text){
       //$unit = mb_substr($unit,1,(strlen(unit-1)),'utf-8');
       break;
     case "string" :
-      // 한 글자씩 단위명 DB와 매칭해서 
+      // 문자열을 잘라내서 숫자 DB에 있는지 검사하여 섭취량 추출
       for($i=0;$i<strlen($text);$i++){
-        $var = $text[$i];
-        $query = "SELECT u_Name from units where u_Name = '$var'";
-        $result = mysqli_query($db, $query);
-        $row = mysqli_fetch_array($result);
-        if(count($row)>0){
-          $unit = $row["u_Name"];
+      $val = mb_substr($text, 0, $i);
+      $query02 = "select * from numbers where n_Text = '$val'";
+      $row02 = mysqli_fetch_array(mysqli_query($db, $query02));
+        if(count($row02)>0){
+          $number = $row02['n_Number'];
+          $key_count = $i;
+          break;
         }
       }
-
-      for($j=0;$j<count($row);$j++){
-        $return_unit[] = $row[$j]["u_Name"];  // 배열 안에 배열이 들어있어서 값을 빼냄
-      }
-
-      for($k=0;$k<count($return_unit);$k++){
-        if(is_string($return_unit[$k])){
-          $f_unit[] = $return_unit[$k]; // 문자열이 있으면 저장
-        } 
-      }
-
-      // 한 단어씩 숫자명 매칭 여부 확인
-      for($l=0;$l<$d_length;$l++){
-        $num = $data[$l];
-        $qry = "SELECT n_Number from numbers where n_Text = '$num'";
-        $res = mysqli_query($db, $qry);
-        $rw[] = mysqli_fetch_assoc($res);
-      }
-      for($m=0;$m<count($rw);$m++){
-        $return_number[] = $rw[$m]["n_Number"]; // 배열 안에 배열이 들어있어서 값을 빼냄
-      }
-      for($n=0;$n<count($return_number);$n++){
-        if(is_numeric($return_number[$n])){
-          $f_number[] = $return_number[$n]; // 문자열이 있으면 저장
-        } 
+      // 섭취량을 찾은 키값에서부터 잘라내서 단위 DB에 있는지 검사하여 단위 추출
+      for($j=$key_count;$j<strlen($text);$j++){
+        $value = mb_substr($text, $j, strlen($text));
+        $qry = "select * from units where u_Name = '$value'";
+        $raw = mysqli_fetch_array(mysqli_query($db, $qry));
+        if(count($raw)>0){
+          $unit = $raw['u_Name'];
+          echo "단위도 찾았다!";
+          echo "<BR>";
+          break;
+        }
       }
       break;
     default :
       break;
   }
-
-  // 3. 숫자가 없다면 넘버 테이블 조회해서 일치하면 섭취량 추출
-      
-        
-
-  
-
-
   $item = [$name, $number, $unit];
-  return $f_item;
+  return $item;
 }
 
 

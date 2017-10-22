@@ -5,7 +5,7 @@ header("Content-Type: application/json; charset=UTF-8");
 echo <<< EOD
 {
 	"type" : "buttons",
-	"buttons" : ["먹은 음식 적기", "통계", "도움말"]
+	"buttons" : ["먹은 음식 적기", "통계", "오늘 뭐 먹었지", "도움말"]
 }
 
 EOD;

@@ -23,6 +23,12 @@ $query = "SELECT * from users where user_key like '$user_key'";
 $result=mysqli_query($db, $query);
 $row=mysqli_fetch_array($result);
 
+// 모든 유저 메시지 DB에 기록하기
+$dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
+$time = $dateTime->format("Y-m-d H:i:s");
+$qry_log = "INSERT INTO message(user_key,msg,time) VALUES ('$user_key', '$text', '$time')";
+mysqli_query($db,$qry_log);
+
 // 신규회원이면
 if($row['new'] == 'y' ){
 
@@ -54,6 +60,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
               $daily_cal *= 1.2;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -63,6 +70,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
               $daily_cal *= 1.375;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -72,6 +80,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
               $daily_cal *= 1.555;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;  
@@ -81,6 +90,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
               $daily_cal *= 1.725;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -90,6 +100,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) + 5;
               $daily_cal *= 1.9;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -112,6 +123,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
               $daily_cal *= 1.2;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -121,6 +133,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
               $daily_cal *= 1.375;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -130,6 +143,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
               $daily_cal *= 1.555;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -139,6 +153,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
               $daily_cal *= 1.725;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -148,6 +163,7 @@ EOD;
               mysqli_query($db,$activity_query);
               $daily_cal = ($weight* 10) + ($height * 6.25) - ($age * 5) - 161;
               $daily_cal *= 1.9;
+              $daily_cal = round($daily_cal,2);
               $cal_query = "update users set recommended_calorie = '$daily_cal' where user_key='$user_key'";
               mysqli_query($db,$cal_query);    
               break;
@@ -155,7 +171,7 @@ EOD;
   echo <<<EOD
       {
         "message" : {
-          "text" : "알려주셔서 감사합니다. ^^ \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
+          "text" : "알려주셔서 감사합니다. :-) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
         }
       }
 EOD;
@@ -176,8 +192,9 @@ EOD;
             $gender = "F";
           }
           $age = preg_replace("/[^0-9]*/s", "", $user_info[1]);
-          $height = preg_replace("/[^0-9]*/s", "", $user_info[2]);
-          $weight = preg_replace("/[^0-9]*/s", "", $user_info[3]);
+          $height = floatval($user_info[2]);
+          $weight = floatval($user_info[3]);
+          
           $p_query = "update users set user_gender = '$gender', user_age = '$age', user_height = '$height', user_weight = '$weight' where user_key = '$user_key'";
           mysqli_query($db,$p_query);
 
@@ -264,12 +281,46 @@ echo <<< EOD
   },
   "keyboard": {
       "type": "buttons",
-      "buttons": ["먹은 음식 적기", "통계", "도움말"]
+      "buttons": ["먹은 음식 적기", "통계", "오늘 뭐 먹었지" , "도움말"]
   }
 }
 EOD;
 }
 
+// '오늘 뭐 먹었지' 처리하기
+else if($text == "오늘 뭐 먹었지"){
+$qry_today = "select * from meals where time > CURRENT_DATE() && user_key='$user_key'";
+$result = mysqli_query($db,$qry_today);
+while ($meal_today = mysqli_fetch_array($result)){
+  $f_nam[] = $meal_today['food_name'];
+  $f_num[] = $meal_today['number'];
+  $f_uni[] = $meal_today['unit']; 
+}
+$response = "네, 오늘";
+for($i=0;$i<count($f_nam);$i++){
+  $response = $response." $f_nam[$i] $f_num[$i] $f_uni[$i]";
+}
+$response = $response."드셨어요";
+
+echo <<< EOD
+    {
+        "message": {
+            "text": "$response"
+        }
+    }    
+EOD;
+
+}
+// 나머지 모든 예외 케이스들 
+else {
+echo <<< EOD
+    {
+        "message": {
+            "text": "죄송해요. 제가 잘 모르겠네요 :-("
+        }
+    }    
+EOD;
+}
   } 
  
   // 음식명이 포함되면
@@ -348,7 +399,7 @@ $response = " ";
 for($j=0;$j<count($f_name);$j++){
   $response .= " $f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
 }
-$response = "기록되었습니다! 총 $cal_total 칼로리입니다!".$response ;
+$response = "기록되었습니다! 총 $cal_total 칼로리입니다! (".$response.")" ;
 
 $dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
 $time = $dateTime->format("Y-m-d H:i:s");
@@ -376,7 +427,13 @@ $remain_calorie = $recommended_calorie-$row04['eat_calorie'];
 $remain = "update users set remain_calorie = $remain_calorie where user_key = '$user_key'";
 mysqli_query($db02, $remain);
 
-$response = $response."오늘 $remain_calorie 칼로리 남으셨네요 (권장 열량 : $recommended_calorie)";
+// 열량 경고
+if($remain_calorie<0){
+  $remain_calorie = -$remain_calorie;
+  $response = $response." $remain_calorie 초과하셨네요 ㅜ.ㅜ 살 빼려면 이제 그만 드시는게 좋겠어요~";
+} else {
+  $response = $response." 오늘 $remain_calorie 칼로리 남으셨네요 ^o^";  
+}
 
 mysqli_close($db02);
 
