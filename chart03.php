@@ -1,13 +1,21 @@
 <!doctype html>
+<?php 
+  $cal_rate = $_GET['cal_rate'];
+  $carbo_rate = $_GET['carbo_rate'];
+  $protein_rate = $_GET['protein_rate'];
+  $fat_rate = $_GET['fat_rate'];
+  $today = date("Y/m/d");
+?>
 <html class="no-js" lang"">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title></title>
+    <title>통계</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
+    <h1><?=$today?>의 먹은 기록</h1>
     <canvas id="CalorieBar" width="100" height="100"></canvas>
     <canvas id="NutriDonut" width="100" height="100"></canvas>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.js"></script>
@@ -20,7 +28,7 @@
                 labels: ["권장", "섭취"],
                 datasets: [{
                     label: '칼로리',
-                    data: [12, 19],
+                    data: [100, <?=$cal_rate?>],
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',
                         'rgba(54, 162, 235, 0.2)'
@@ -51,7 +59,7 @@
               type: 'doughnut',
               data: {
                   datasets: [{
-                      data: [10,20,30],
+                      data: [<?=$carbo_rate?>,<?=$protein_rate?>,<?=$fat_rate?>],
                       backgroundColor: [
                           'rgba(75, 192, 192, 0.2)',
                           'rgba(153, 102, 255, 0.2)',

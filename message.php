@@ -43,7 +43,7 @@ if($row['new'] == 'y' ){
 echo <<<EOD
     {
         "message": {
-            "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요. \\r\\n 성별, 나이, 키, 몸무게를 아래와 같이 써 주세요. (쉼표 꼭 붙여주세요) \\r\\n 예) 여, 24, 165, 70"
+            "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요.(아잉) \\r\\n 성별, 나이, 키, 몸무게를 아래와 같이 써 주세요. (쉼표 꼭 붙여주세요(제발)) \\r\\n 예) 여, 24, 165, 70"
         }
     }
 EOD;
@@ -108,7 +108,7 @@ EOD;
 echo <<<EOD
       {
         "message" : {
-          "text" : "알려주셔서 감사합니다. ^^ \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
+          "text" : "알려주셔서 감사합니다. (굿) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n \\r\\n 이제 '고구마 1개, 바나나 1개'와 같이 먹은 음식을 적으면 제가 권장 열량에서 몇 칼로리 남았는지 알려 드려요~\\r\\n \\r\\n 오늘의 통계가 궁금하면? '통계' \\r\\n 버튼을 다시 불러오려면? '버튼' \\r\\n 그 외 다른 기능이 궁금하면? '도움말' \\r\\n 이렇게 입력해 주세요 (컴온)"
         }
       }
 EOD;
@@ -230,7 +230,7 @@ else {
   // 음식명 포함 여부를 보기 위해서 풀 텍스트 검색
   $f_query = "SELECT food_Name, MATCH (food_Name)
                 AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-                FROM foodCal WHERE MATCH (food_Name) AGAINST
+                FROM foods WHERE MATCH (food_Name) AGAINST
                 ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
   $f_result=mysqli_query($db, $f_query);
   $f_row = mysqli_fetch_array($f_result);      
@@ -243,7 +243,7 @@ if($text == "먹은 음식 적기" ){
 echo <<<EOD
   {
       "message": {
-          "text": "무엇을 드셨나요? 고구마 1개, 바나나 2개와 같이 적어주세요!"
+          "text": "무엇을 드셨나요? 고구마 1개, 바나나 2개와 같이 적어주세요! (하하)"
       }
   }
 EOD;
@@ -255,7 +255,7 @@ else if( strpos($text, "통계") !== false ){
 echo <<< EOD
   {
   "message": {
-    "text": "http://220.230.115.39/chart.php?cal_rate=$cal_rate&carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
+    "text": "http://220.230.115.39/chart03.php?cal_rate=$cal_rate&carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
     }
   }    
 EOD;
@@ -316,7 +316,7 @@ else {
 echo <<< EOD
     {
         "message": {
-            "text": "죄송해요. 제가 잘 모르겠네요 :-("
+            "text": "죄송해요. 제가 잘 모르겠네요 (힘듦)"
         }
     }    
 EOD;
@@ -371,25 +371,19 @@ mysqli_query($db02,"set names utf8");
 
 // 음식 별 칼로리 결과값 불러오기
 for($i=0;$i<count($f_name);$i++){
-  $sql = "SELECT food_id, food_Cal FROM foodCal where food_Name like "."'$f_name[$i]'";
+  $sql = "SELECT * FROM foods where food_Name like "."'$f_name[$i]'";
   $result02=mysqli_query($db02, $sql);
   $row02 = mysqli_fetch_array($result02);
   $cal[$i] = $f_number[$i]*$row02['food_Cal'];  //1인분 칼로리와 수량 곱하기
-  $f_id[$i] = $row02['food_id'];  //음식 별 id 값 저장
+  // 음식 별 영양소 결과값 불러오기
+  $carbo[$i] = $f_number[$i]*$row02['Carbohydrate'];  //1인분 탄수화물과 수량 곱하기
+  $protein[$i] = $f_number[$i]*$row02['Protein'];  //1인분 단백질과 수량 곱하기
+  $fat[$i] = $f_number[$i]*$row02['Fat'];  //1인분 지방과 수량 곱하기
+  //음식 별 id 값 저장
+  $f_id[$i] = $row02['food_id'];  
 }
 
 $cal_total = array_sum($cal); //총 칼로리 계산
-
-// 음식 별 영양소 결과값 불러오기
-for($h=0;$h<count($f_name);$h++){
-  $sql_h = "SELECT * FROM foodNutrient where food_Name like "."'$f_name[$h]'";
-  $result03=mysqli_query($db02, $sql_h);
-  $row03 = mysqli_fetch_array($result03);
-  $carbo[$h] = $f_number[$h]*$row03['Carbohydrate'];  //1인분 탄수화물과 수량 곱하기
-  $protein[$h] = $f_number[$h]*$row03['Protein'];  //1인분 단백질과 수량 곱하기
-  $fat[$h] = $f_number[$h]*$row03['Fat'];  //1인분 지방과 수량 곱하기
-}
-
 $carbo_total = array_sum($carbo); //총 탄수화물 계산
 $protein_total = array_sum($protein); //총 단백질 계산
 $fat_total = array_sum($fat); //총 지방 계산
@@ -397,9 +391,9 @@ $fat_total = array_sum($fat); //총 지방 계산
 //응답 문장 만들기
 $response = " ";
 for($j=0;$j<count($f_name);$j++){
-  $response .= " $f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
+  $response .= "$f_name[$j] $f_number[$j] $f_unit[$j] $cal[$j]kcal ";  
 }
-$response = "기록되었습니다! 총 $cal_total 칼로리입니다! (".$response.")" ;
+$response = "기록되었습니다! 총 $cal_total 칼로리입니다! \\r\\n(".$response.")\\r\\n" ;
 
 $dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
 $time = $dateTime->format("Y-m-d H:i:s");
@@ -430,9 +424,9 @@ mysqli_query($db02, $remain);
 // 열량 경고
 if($remain_calorie<0){
   $remain_calorie = -$remain_calorie;
-  $response = $response." $remain_calorie 초과하셨네요 ㅜ.ㅜ 살 빼려면 이제 그만 드시는게 좋겠어요~";
+  $response = $response." $remain_calorie 칼로리 초과하셨네요 (깜짝) \\r\\n오늘은 이제 그만 드시는게 좋겠어요 (정색)";
 } else {
-  $response = $response." 오늘 $remain_calorie 칼로리 남으셨네요 ^o^";  
+  $response = $response." 오늘 $remain_calorie 칼로리 남으셨네요 (씨익)";  
 }
 
 mysqli_close($db02);

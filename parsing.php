@@ -30,7 +30,7 @@ $text = str_replace( "~" ,"",$text); //물결표시
 // 음식 DB에서 자연어 검색
 $f_query = "SELECT food_Name, MATCH (food_Name)
               AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-              FROM foodCal WHERE MATCH (food_Name) AGAINST
+              FROM foods WHERE MATCH (food_Name) AGAINST
               ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
 $f_result=mysqli_query($db, $f_query);
 $pos = array();
@@ -74,7 +74,7 @@ function parseText($text){
   mysqli_query($db,"set names utf8");   
   $query = "SELECT food_Name, MATCH (food_Name)
           AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-          FROM foodCal WHERE MATCH (food_Name) AGAINST
+          FROM foods WHERE MATCH (food_Name) AGAINST
           ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
   $result=mysqli_query($db, $query);
   // 검색 결과가 원문과 동일한 문자열이 있으면 음식명으로 저장
