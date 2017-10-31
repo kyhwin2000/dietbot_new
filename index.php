@@ -1,21 +1,7 @@
-<!-- <!DOCTYPE HTML>
-<html>
-	<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title> test page </title>
-	</head>
-
-	<body> 
-		what do you eat?
-		<form name="myform" method="POST" action="test02.php">
-			음식명 : <input type="textfield" name="text" />
-			<input type = "submit" value = "제출" />
-		</form>
-	</body>
-</html> -->
 <?php
-$text = "고구마세개바나나2개";
-// print_r(parseText($text));
+// $json = file_get_contents("php://input");
+$text = "사과 1개";
+
 $f_item = array();
 $f_name = array();
 $f_number = array();
@@ -41,69 +27,58 @@ $text = str_replace( ";" ,"",$text); //세미콜론
 $text = str_replace( "^^" ,"",$text); //웃음표시
 $text = str_replace( "~" ,"",$text); //물결표시
 
-// 띄어쓰기 안 한 경우 공백 삽입
-$text = trim($text);
-if(strpos($text,' ') == false){
-	for($b=0;$b<strlen($text);$b++){
-      	$snip = mb_substr($text, 0, $b);
-      	$qry_snip = "select * from foodCal where food_Name = '$snip'";
-      	$row_snip = mysqli_fetch_array(mysqli_query($db, $qry_snip));
-        if(count($row_snip)>0){
-          $text = $snip." ".mb_substr($text,$b,strlen($text));
-          break;
-    	}
-	}
-}
-
 // 음식 DB에서 자연어 검색
 $f_query = "SELECT food_Name, MATCH (food_Name)
               AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-              FROM foodCal WHERE MATCH (food_Name) AGAINST
+              FROM foods WHERE MATCH (food_Name) AGAINST
               ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
 $f_result=mysqli_query($db, $f_query);
 $pos = array();
+
 // DB와 매칭되는 음식명 문자열 위치 찾기
 while($f_row = mysqli_fetch_array($f_result)){
-	array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
-	print_r($f_row);
-	echo "<BR>";
+  array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
 }      
 $pos = array_filter($pos,'is_numeric');
-sort($pos);	
+sort($pos); 
 print_r($pos);
-echo("<BR>");
 
 // 음식명 문자열 위치부터 그 다음 음식명 문자열 위치까지 잘라서 아이템 분리하기
 for($q=0;$q<count($pos)-1;$q++){
-	array_push($f_item,mb_substr($text,$pos[$q],$pos[$q+1]-$pos[$q]));	
+  array_push($f_item,mb_substr($text,$pos[$q],$pos[$q+1]-$pos[$q]));  
 }
 array_push($f_item,mb_substr($text,$pos[count($pos)-1],strlen($text)-$pos[count($pos)-1]));
 
 print_r($f_item);
-echo("<BR>");
+
 // 한 아이템마다 함수에 던져서 음식명, 섭취량, 단위 추출하기
 for($r=0;$r<count($f_item);$r++){
-	array_push($f_name,parseText($f_item[$r])[0]);
-	array_push($f_number,parseText($f_item[$r])[1]);
-	array_push($f_unit,parseText($f_item[$r])[2]);
+  array_push($f_name,parseText($f_item[$r])[0]);
+  if(parseText($f_item[$r])[1]==""){ 
+    array_push($f_number,'1');
+  } else {
+    array_push($f_number,parseText($f_item[$r])[1]);  
+  }
+  if(parseText($f_item[$r])[2]==""){ 
+    array_push($f_unit,'인분');
+  } else {
+    array_push($f_unit,parseText($f_item[$r])[2]);  
+  }
 }
 
-print_r($f_name);
-print_r($f_number);
-print_r($f_unit);
 
 function parseText($text){
-	//DB 연결
-	$db = new mysqli('localhost','root','Dntjd13!','dietbot');
-	mysqli_query($db,"set names utf8");   
-	if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
+  //DB 연결
+  $db = new mysqli('localhost','root','Dntjd13!','dietbot');
+  mysqli_query($db,"set names utf8");   
+  if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 
   $item = array();
   // 1. 풀텍스트 검색하여 음식명 추출
   mysqli_query($db,"set names utf8");   
   $query = "SELECT food_Name, MATCH (food_Name)
           AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-          FROM foodCal WHERE MATCH (food_Name) AGAINST
+          FROM foods WHERE MATCH (food_Name) AGAINST
           ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
   $result=mysqli_query($db, $query);
   // 검색 결과가 원문과 동일한 문자열이 있으면 음식명으로 저장
@@ -131,15 +106,15 @@ function parseText($text){
       $number = preg_replace("/[^0-9]*/s", "", $text);
       // 문자열 중 한글, 영문만 추출하여 단위로 저장
       $pattern = '/([\xEA-\xED][\x80-\xBF]{2}|[a-zA-Z])+/';
-    	preg_match_all($pattern, $text, $match);
-    	$unit = implode('', $match[0]);
+      preg_match_all($pattern, $text, $match);
+      $unit = implode('', $match[0]);
       break;
     case "string" :
       // 문자열을 잘라내서 숫자 DB에 있는지 검사하여 섭취량 추출
       for($i=0;$i<strlen($text);$i++){
-      	$val = mb_substr($text, 0, $i);
-      	$query02 = "select * from numbers where n_Text = '$val'";
-      	$row02 = mysqli_fetch_array(mysqli_query($db, $query02));
+      $val = mb_substr($text, 0, $i);
+      $query02 = "select * from numbers where n_Text = '$val'";
+      $row02 = mysqli_fetch_array(mysqli_query($db, $query02));
         if(count($row02)>0){
           $number = $row02['n_Number'];
           $key_count = $i;
@@ -164,6 +139,12 @@ function parseText($text){
   return $item;
 }
 
+$return['f_name'] = $f_name;
+$return['f_unit'] = $f_unit;
+$return['f_number'] = $f_number;
+
+$js_return = json_encode($return);
+echo $js_return;
 
 
 ?>

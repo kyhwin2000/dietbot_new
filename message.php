@@ -238,8 +238,8 @@ else {
   // 음식명이 포함되지 않으면
   if(count($f_row)<1){
 
-// '먹은 음식 적기' 버튼 처리
-if($text == "먹은 음식 적기" ){  
+    // '먹은 음식 적기' 버튼 처리
+    if($text == "먹은 음식 적기" ){  
 echo <<<EOD
   {
       "message": {
@@ -247,10 +247,10 @@ echo <<<EOD
       }
   }
 EOD;
-} 
+    } 
  
-// '오늘의 통계' 버튼 처리
-else if( strpos($text, "통계") !== false ){
+    // '오늘의 통계' 버튼 처리
+    else if( strpos($text, "통계") !== false ){
 
 echo <<< EOD
   {
@@ -259,48 +259,56 @@ echo <<< EOD
     }
   }    
 EOD;
-}
+    }
 
-// '도움말' 버튼 처리
-else if( $text == "도움말"){
+    // '도움말' 버튼 처리
+    else if( $text == "도움말"){
 echo <<< EOD
     {
         "message": {
-            "text": "이렇게 말해 보세요~! 고구마 1개, 바나나 2개 or 오늘 통계 or 버튼"
+            "text": "다이어트 봇에게 드신 음식을 적어주실 때 아래와 같이 적으시면 되요 (최고) \\r\\n \\r\\n '고구마' <-- 요렇게 음식 이름만 적으면 1인분으로 계산 \\r\\n '고구마 2개' <-- 요렇게 섭취량까지 적어주시면 반영해서 계산 \\r\\n '사과 2개, 고구마 1개' <-- 요렇게 여러 개를 적으셔도 되구요 \\r\\n 오늘 드신 음식이 궁금할 땐 : '오늘 뭐 먹었지'라고 적으시고 \\r\\n 탄단지 통계가 궁금하다면 : '통계'라고 적어주세요 \\r\\n 버튼 다시 불러오기 : '버튼' \\r\\n \\r\\n그럼 건강한 식사 되세요~! (씨익)"
         }
     }    
 EOD;
-}
+    }
 
-// '버튼' 누르면 키보드 돌아오기
-else if($text == "버튼"){
+
+    // 취소하기
+    else if(strpos($text, "취소") !== false){
+      $qry_id = "SELECT MAX(meal_id) FROM meals where user_key='$user_key'";
+      $m_id = mysqli_fetch_array(mysqli_query($db,$qry_id));
+      $id = $m_id['MAX(meal_id)'];
+      $ask = "SELECT cal from meals where user_key='$user_key' && meal_id='$id'";
+      $cal_to = mysqli_fetch_array(mysqli_query($db,$ask));
+      $cal = $cal_to['cal'];
+      $del_Cal = "update users set eat_calorie = eat_calorie-$cal where user_key = '$user_key'";
+      mysqli_query($db, $del_Cal);
+      $qry_del = "delete from meals where meal_id='$id' && user_key='$user_key'";
+      mysqli_query($db,$qry_del); 
 echo <<< EOD
-{
-  "message": {
-    "text": "아래 버튼을 눌러 보세요"
-  },
-  "keyboard": {
-      "type": "buttons",
-      "buttons": ["먹은 음식 적기", "통계", "오늘 뭐 먹었지" , "도움말"]
-  }
-}
+    {
+        "message": {
+            "text": "넵! 방금 전 적으신 건 취소되었습니다. (씨익)"
+        }
+    }    
 EOD;
-}
 
-// '오늘 뭐 먹었지' 처리하기
-else if($text == "오늘 뭐 먹었지"){
-$qry_today = "select * from meals where time > CURRENT_DATE() && user_key='$user_key'";
-$result = mysqli_query($db,$qry_today);
-while ($meal_today = mysqli_fetch_array($result)){
-  $f_nam[] = $meal_today['food_name'];
-  $f_num[] = $meal_today['number'];
-  $f_uni[] = $meal_today['unit']; 
-}
-$response = "네, 오늘";
-for($i=0;$i<count($f_nam);$i++){
-  $response = $response." $f_nam[$i] $f_num[$i] $f_uni[$i]";
-}
-$response = $response."드셨어요";
+    }
+
+    // '오늘 뭐 먹었지' 처리하기
+    else if($text == "오늘 뭐 먹었지"){
+    $qry_today = "select * from meals where time > CURRENT_DATE() && user_key='$user_key'";
+    $result = mysqli_query($db,$qry_today);
+    while ($meal_today = mysqli_fetch_array($result)){
+      $f_nam[] = $meal_today['food_name'];
+      $f_num[] = $meal_today['number'];
+      $f_uni[] = $meal_today['unit']; 
+    }
+    $response = "네, 오늘";
+    for($i=0;$i<count($f_nam);$i++){
+      $response = $response." $f_nam[$i] $f_num[$i] $f_uni[$i]";
+    }
+    $response = $response."드셨어요";
 
 echo <<< EOD
     {
@@ -310,9 +318,9 @@ echo <<< EOD
     }    
 EOD;
 
-}
+    }
 // 나머지 모든 예외 케이스들 
-else {
+    else {
 echo <<< EOD
     {
         "message": {
@@ -320,7 +328,7 @@ echo <<< EOD
         }
     }    
 EOD;
-}
+    }
   } 
  
   // 음식명이 포함되면
@@ -398,11 +406,15 @@ $response = "기록되었습니다! 총 $cal_total 칼로리입니다! \\r\\n(".
 $dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
 $time = $dateTime->format("Y-m-d H:i:s");
 
-//meals DB에 시간과 함께 기록하기
+//meals에 시간과 함께 아이템 별로 기록하기
 for($k=0;$k<count($f_name);$k++){
   $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$time')";
   $record=mysqli_query($db02, $meal_data);
 }
+
+// meals에 총 칼로리 기록하기
+$meal_total = "INSERT INTO meals(user_key,food_name,cal,time) VALUES ('$user_key', '메시지 별','$cal_total','$time')";
+mysqli_query($db02, $meal_total);
 
 //누적 칼로리, 영양소 user DB에 기록하기
 $add_Cal = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
