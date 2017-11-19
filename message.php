@@ -237,79 +237,36 @@ else {
 
   // 음식명이 포함되지 않으면
   if(count($f_row)<1){
+    // 왓슨 대화 API로 보내서 처리하기
+    $workspace_id = '2f2619f4-b142-4e4c-a238-fb211e746dd9';
+    $release_date = '2017-10-24';
+    $username = '04ebe333-2a50-4e3a-9b09-b9a532d3b3ca';
+    $password = 'Z5HfbF6HKAtA';
 
-    // '먹은 음식 적기' 버튼 처리
-    if($text == "먹은 음식 적기" ){  
-echo <<<EOD
-  {
-      "message": {
-          "text": "무엇을 드셨나요? 고구마 1개, 바나나 2개와 같이 적어주세요! (하하)"
-      }
-  }
-EOD;
-    } 
- 
-    // '오늘의 통계' 버튼 처리
-    else if( strpos($text, "통계") !== false ){
-
-echo <<< EOD
-  {
-  "message": {
-    "text": "http://220.230.115.39/chart03.php?cal_rate=$cal_rate&carbo_rate=$carbo_rate&protein_rate=$protein_rate&fat_rate=$fat_rate"
+    // Make a request message for Watson API in json.
+    $data['input']['text'] = $text;
+    if(isset($_POST['context']) && $_POST['context']){
+      $data['context'] = json_decode($_POST['context'], JSON_UNESCAPED_UNICODE);
     }
-  }    
-EOD;
-    }
+    $data['alternate_intents'] = false;
+    $json = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-    // '도움말' 버튼 처리
-    else if( $text == "도움말"){
-echo <<< EOD
-    {
-        "message": {
-            "text": "다이어트 봇에게 드신 음식을 적어주실 때 아래와 같이 적으시면 되요 (최고) \\r\\n \\r\\n '고구마' <-- 요렇게 음식 이름만 적으면 1인분으로 계산 \\r\\n '고구마 2개' <-- 요렇게 섭취량까지 적어주시면 반영해서 계산 \\r\\n '사과 2개, 고구마 1개' <-- 요렇게 여러 개를 적으셔도 되구요 \\r\\n 오늘 드신 음식이 궁금할 땐 : '오늘 뭐 먹었지'라고 적으시고 \\r\\n 탄단지 통계가 궁금하다면 : '통계'라고 적어주세요 \\r\\n 버튼 다시 불러오기 : '버튼' \\r\\n \\r\\n그럼 건강한 식사 되세요~! (씨익)"
-        }
-    }    
-EOD;
-    }
+    // Post the json to the Watson API via cURL.
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_URL, 'https://watson-api-explorer.mybluemix.net/conversation/api/v1/workspaces/'.$workspace_id.'/message?version='.$release_date);
+    curl_setopt($ch, CURLOPT_USERPWD, $username.":".$password);
+    curl_setopt($ch, CURLOPT_POST, true );
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+    $result = trim( curl_exec( $ch ) );
+    curl_close($ch);
 
-
-    // 취소하기
-    else if(strpos($text, "취소") !== false){
-      $qry_id = "SELECT MAX(meal_id) FROM meals where user_key='$user_key'";
-      $m_id = mysqli_fetch_array(mysqli_query($db,$qry_id));
-      $id = $m_id['MAX(meal_id)'];
-      $ask = "SELECT cal from meals where user_key='$user_key' && meal_id='$id'";
-      $cal_to = mysqli_fetch_array(mysqli_query($db,$ask));
-      $cal = $cal_to['cal'];
-      $del_Cal = "update users set eat_calorie = eat_calorie-$cal where user_key = '$user_key'";
-      mysqli_query($db, $del_Cal);
-      $qry_del = "delete from meals where meal_id='$id' && user_key='$user_key'";
-      mysqli_query($db,$qry_del); 
-echo <<< EOD
-    {
-        "message": {
-            "text": "넵! 방금 전 적으신 건 취소되었습니다. (씨익)"
-        }
-    }    
-EOD;
-
-    }
-
-    // '오늘 뭐 먹었지' 처리하기
-    else if($text == "오늘 뭐 먹었지"){
-    $qry_today = "select * from meals where time > CURRENT_DATE() && user_key='$user_key'";
-    $result = mysqli_query($db,$qry_today);
-    while ($meal_today = mysqli_fetch_array($result)){
-      $f_nam[] = $meal_today['food_name'];
-      $f_num[] = $meal_today['number'];
-      $f_uni[] = $meal_today['unit']; 
-    }
-    $response = "네, 오늘";
-    for($i=0;$i<count($f_nam);$i++){
-      $response = $response." $f_nam[$i] $f_num[$i] $f_uni[$i]";
-    }
-    $response = $response."드셨어요";
-
+    // Responce the result.
+    $raw = json_decode($result, true);
+    $response = $raw['output']['text'][0];
+//응답하기
 echo <<< EOD
     {
         "message": {
@@ -318,17 +275,6 @@ echo <<< EOD
     }    
 EOD;
 
-    }
-// 나머지 모든 예외 케이스들 
-    else {
-echo <<< EOD
-    {
-        "message": {
-            "text": "죄송해요. 제가 잘 모르겠네요 (힘듦)"
-        }
-    }    
-EOD;
-    }
   } 
  
   // 음식명이 포함되면
