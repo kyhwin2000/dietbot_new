@@ -1,5 +1,5 @@
 <?php
-$message = "남자";
+$message = "통계 보여줘";
 // $cal_rate = 40;
 // $carbo_rate = 30;
 // $protein_rate = 20;
@@ -66,8 +66,9 @@ curl_close($ch);
 
 // Responce the result.
 // echo json_encode($result, JSON_UNESCAPED_UNICODE);
-print_r($result);
-// $raw = json_decode($result, true);
+// print_r($result);
+$raw = json_decode($result, true);
+print_r($raw['intents'][0]['intent']);
 
 // print_r($raw);
 // $response = $raw['output']['text'][0];

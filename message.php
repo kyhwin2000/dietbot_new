@@ -245,63 +245,66 @@ else {
   $f_result=mysqli_query($db, $f_query);
   $f_row = mysqli_fetch_array($f_result);      
 
-  // 음식명이 포함되지 않으면
+    // 음식명이 포함되지 않으면
   if(count($f_row)<1){
-    //그래프를 만들기 위한 오늘의 칼로리, 영양소 값 조회
-    $cal_rate = $row['eat_calorie'] / $row['recommended_calorie']*100;
-    $carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
-    $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
-    $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
-    $recommended_calorie = $row['recommended_calorie'];
-    $eat_calorie = $row['eat_calorie'];
-    $remain_calorie = $row['remain_calorie'];
 
-    $meal_qry = "select * from meals where user_key='$user_key'";
-    $meal_result = mysqli_query($db,$meal_qry);
-
-    // 먹은 기록 미리 불러오기
-    $eatlog_qry = "SELECT food_name, number, unit from meals where user_key = '$user_key' && time > CURDATE()";
-    $eat_items = mysqli_query($db,$eatlog_qry);
-    $eat_log = "";
-    while ($row = mysqli_fetch_array($eat_items, MYSQLI_BOTH)){
-      $eat_log .= $row['food_name']." ".$row['number']." ".$row['unit']." ";
-    }
-
-    
-    // Make a request message for Watson API in json.
-    $data['input']['text'] = $text;
-    $data['context']['user_key'] = $user_key;
-    $data['context']['cal_rate'] = $cal_rate;
-    $data['context']['carbo_rate'] = $carbo_rate;
-    $data['context']['protein_rate'] = $protein_rate;
-    $data['context']['fat_rate'] = $fat_rate;
-    $data['context']['recommended_calorie'] = $recommended_calorie;
-    $data['context']['eat_calorie'] = $eat_calorie;
-    $data['context']['remain_calorie'] = $remain_calorie;
-    $data['context']['eat_log'] = $eat_log;
-    $data['alternate_intents'] = false;
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE);
-
-    // Post the json to the Watson API via cURL.
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_URL, 'https://watson-api-explorer.mybluemix.net/conversation/api/v1/workspaces/'.$workspace_id.'/message?version='.$release_date);
-    curl_setopt($ch, CURLOPT_USERPWD, $username.":".$password);
-    curl_setopt($ch, CURLOPT_POST, true );
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-    $result = trim( curl_exec( $ch ) );
-    curl_close($ch);
-
-    // Responce the result.
-    $raw = json_decode($result, true);
-    $response = $raw['output']['text'][0];
-    
-    //DB 닫기
-    mysqli_close($db);
-
-    //응답하기
+    if($row['eat_calorie']==0){ // 먹은 음식이 없으면
+echo <<<EOD
+      {
+        "message" : {
+          "text" : "아직 오늘 드신 게 없네요(힘듦) 먼저 드신 음식을 알려주세요~"
+        }
+      }
+EOD;
+    } else {  // 먹은 음식이 있으면
+      //그래프를 만들기 위한 오늘의 칼로리, 영양소 값 조회
+      $cal_rate = $row['eat_calorie'] / $row['recommended_calorie']*100;
+      $carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
+      $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
+      $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
+      $recommended_calorie = $row['recommended_calorie'];
+      $eat_calorie = $row['eat_calorie'];
+      $remain_calorie = $row['remain_calorie'];
+      $meal_qry = "select * from meals where user_key='$user_key'";
+      $meal_result = mysqli_query($db,$meal_qry);
+      // 먹은 기록 미리 불러오기
+      $eatlog_qry = "SELECT food_name, number, unit from meals where user_key = '$user_key' && time > CURDATE()";
+      $eat_items = mysqli_query($db,$eatlog_qry);
+      $eat_log = "";
+      while ($row = mysqli_fetch_array($eat_items, MYSQLI_BOTH)){
+        $eat_log .= $row['food_name']." ".$row['number']." ".$row['unit']." ";
+      }
+      // Make a request message for Watson API in json.
+      $data['input']['text'] = $text;
+      $data['context']['user_key'] = $user_key;
+      $data['context']['cal_rate'] = $cal_rate;
+      $data['context']['carbo_rate'] = $carbo_rate;
+      $data['context']['protein_rate'] = $protein_rate;
+      $data['context']['fat_rate'] = $fat_rate;
+      $data['context']['recommended_calorie'] = $recommended_calorie;
+      $data['context']['eat_calorie'] = $eat_calorie;
+      $data['context']['remain_calorie'] = $remain_calorie;
+      $data['context']['eat_log'] = $eat_log;
+      $data['alternate_intents'] = false;
+      $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+      // Post the json to the Watson API via cURL.
+      $ch = curl_init();
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_URL, 'https://watson-api-explorer.mybluemix.net/conversation/api/v1/workspaces/'.$workspace_id.'/message?version='.$release_date);
+      curl_setopt($ch, CURLOPT_USERPWD, $username.":".$password);
+      curl_setopt($ch, CURLOPT_POST, true );
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+      curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+      $result = trim( curl_exec( $ch ) );
+      curl_close($ch);
+      // Responce the result.
+      $raw = json_decode($result, true);
+      $response = $raw['output']['text'][0];
+      
+      //DB 닫기
+      mysqli_close($db);
+      //응답하기
 echo <<< EOD
     {
         "message": {
@@ -309,8 +312,12 @@ echo <<< EOD
         }
     }    
 EOD;
-
+    }
+    
+    
+    
   } 
+
  
   // 음식명이 포함되면
   else {
