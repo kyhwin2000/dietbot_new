@@ -29,27 +29,30 @@ $time = $dateTime->format("Y-m-d H:i:s");
 $qry_log = "INSERT INTO message(user_key,msg,time) VALUES ('$user_key', '$text', '$time')";
 mysqli_query($db,$qry_log);
 
+// 왓슨 대화 API로 보내서 처리하기
+$workspace_id = '2f2619f4-b142-4e4c-a238-fb211e746dd9';
+$release_date = '2017-10-24';
+$username = '04ebe333-2a50-4e3a-9b09-b9a532d3b3ca';
+$password = 'Z5HfbF6HKAtA';
+
 // 신규회원이면
 if($row['new'] == 'y' ){
-
   $gender = $row['user_gender'];
   $age = $row['user_age'];
   $height = $row['user_height'];
   $weight = $row['user_weight'];
   $activity = $row['user_activity'];
-
   // 아직 개인 정보 값이 비어 있으면 입력 받기
   if ($gender == '0'){
 echo <<<EOD
     {
         "message": {
-            "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요.(아잉) \\r\\n 성별, 나이, 키, 몸무게를 아래와 같이 써 주세요. (쉼표 꼭 붙여주세요(제발)) \\r\\n 예) 여, 24, 165, 70"
+            "text": "하루 권장 열량 계산을 위해서 몇 가지만 여쭤볼게요.(아잉) \\r\\n성별, 나이, 키, 몸무게를 아래와 같이 써 주세요. \\r\\n(쉼표 꼭 붙여주세요(제발)) \\r\\n예) 여, 24, 165, 70"
         }
     }
 EOD;
   $gen_query = "update users set user_gender = 1 where user_key = '$user_key'";
   mysqli_query($db,$gen_query);
-
   } else {  // 아직 성별 및 다른 값들 입력 전이면
       if($activity == '10'){
         if($gender == "M"){   // 남자면
@@ -108,7 +111,7 @@ EOD;
 echo <<<EOD
       {
         "message" : {
-          "text" : "알려주셔서 감사합니다. (굿) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n \\r\\n 이제 '고구마 1개, 바나나 1개'와 같이 먹은 음식을 적으면 제가 권장 열량에서 몇 칼로리 남았는지 알려 드려요~\\r\\n \\r\\n 오늘의 통계가 궁금하면? '통계' \\r\\n 버튼을 다시 불러오려면? '버튼' \\r\\n 그 외 다른 기능이 궁금하면? '도움말' \\r\\n 이렇게 입력해 주세요 (컴온)"
+          "text" : "알려주셔서 감사합니다. (굿) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n \\r\\n 이제 '고구마 1개, 바나나 1개'와 같이 먹은 음식을 적으면 제가 권장 열량에서 몇 칼로리 남았는지 알려 드려요~\\r\\n 그 외 다른 기능이 궁금하면 언제든 '도움말'이라고 적어주세요 (컴온)"
         }
       }
 EOD;
@@ -171,7 +174,7 @@ EOD;
   echo <<<EOD
       {
         "message" : {
-          "text" : "알려주셔서 감사합니다. :-) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n 이제 드신 음식을 적어주시면 제가 권장 열량에서 얼마나 남았는지 알려 드려요~\\r\\n 언제든지 다이어트봇의 기능이 궁금하시면 채팅창에 도움말이라고 적어주세요"
+          "text" : "알려주셔서 감사합니다. (굿) \\r\\n 고객님의 하루 권장 열량은 $daily_cal kCal입니다. \\r\\n \\r\\n 이제 '고구마 1개, 바나나 1개'와 같이 먹은 음식을 적으면 제가 권장 열량에서 몇 칼로리 남았는지 알려 드려요~\\r\\n 그 외 다른 기능이 궁금하면 언제든 '도움말'이라고 적어주세요 (컴온)"
         }
       }
 EOD;
@@ -182,7 +185,18 @@ EOD;
       } else {  // activity 값이 10이 아니면 
           // 쉽표 기준 잘라서 배열로 저장하기
           $user_info = explode(",",$text);
-          for($a=0;$a<(count($user_info));$a++){   
+
+          //잘못 입력한 경우
+          if(count($user_info)<2){
+echo <<<EOD
+      {
+        "message" : {
+          "text" : "죄송하지만 '여, 24, 165, 70' 와 같이 쉼표 붙여서 다시 한 번 부탁드릴게요 (제발)"
+        }
+      }
+EOD;
+          } else {  // 제대로 입력한 경우
+            for($a=0;$a<(count($user_info));$a++){   
             // 앞 뒤 공백 제거하기
             $user_info[$a] = trim($user_info[$a]);
           }
@@ -197,7 +211,6 @@ EOD;
           
           $p_query = "update users set user_gender = '$gender', user_age = '$age', user_height = '$height', user_weight = '$weight' where user_key = '$user_key'";
           mysqli_query($db,$p_query);
-
 echo <<<EOD
   {
         "message": { "text": "평소에 운동을 얼마나 하시는 편인가요?"},
@@ -215,18 +228,15 @@ echo <<<EOD
 EOD;
           $act_query = "update users set user_activity = '10' where user_key = '$user_key'";
           mysqli_query($db,$act_query);
+          }
+          
       }         
   } 
 }
 
 // 기존 회원이면
 else {
-  //그래프를 만들기 위한 오늘의 칼로리, 영양소 값 조회
-  $cal_rate = $row['eat_calorie'] / $row['recommended_calorie']*100;
-  $carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
-  $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
-  $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
-
+  
   // 음식명 포함 여부를 보기 위해서 풀 텍스트 검색
   $f_query = "SELECT food_Name, MATCH (food_Name)
                 AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
@@ -237,17 +247,38 @@ else {
 
   // 음식명이 포함되지 않으면
   if(count($f_row)<1){
-    // 왓슨 대화 API로 보내서 처리하기
-    $workspace_id = '2f2619f4-b142-4e4c-a238-fb211e746dd9';
-    $release_date = '2017-10-24';
-    $username = '04ebe333-2a50-4e3a-9b09-b9a532d3b3ca';
-    $password = 'Z5HfbF6HKAtA';
+    //그래프를 만들기 위한 오늘의 칼로리, 영양소 값 조회
+    $cal_rate = $row['eat_calorie'] / $row['recommended_calorie']*100;
+    $carbo_rate = $row['eat_carbo'] * 4 / $row['eat_calorie'] * 100;
+    $protein_rate = $row['eat_protein'] * 4 / $row['eat_calorie'] * 100;
+    $fat_rate = $row['eat_fat'] * 9 / $row['eat_calorie'] * 100;
+    $recommended_calorie = $row['recommended_calorie'];
+    $eat_calorie = $row['eat_calorie'];
+    $remain_calorie = $row['remain_calorie'];
 
+    $meal_qry = "select * from meals where user_key='$user_key'";
+    $meal_result = mysqli_query($db,$meal_qry);
+
+    // 먹은 기록 미리 불러오기
+    $eatlog_qry = "SELECT food_name, number, unit from meals where user_key = '$user_key' && time > CURDATE()";
+    $eat_items = mysqli_query($db,$eatlog_qry);
+    $eat_log = "";
+    while ($row = mysqli_fetch_array($eat_items, MYSQLI_BOTH)){
+      $eat_log .= $row['food_name']." ".$row['number']." ".$row['unit']." ";
+    }
+
+    
     // Make a request message for Watson API in json.
     $data['input']['text'] = $text;
-    if(isset($_POST['context']) && $_POST['context']){
-      $data['context'] = json_decode($_POST['context'], JSON_UNESCAPED_UNICODE);
-    }
+    $data['context']['user_key'] = $user_key;
+    $data['context']['cal_rate'] = $cal_rate;
+    $data['context']['carbo_rate'] = $carbo_rate;
+    $data['context']['protein_rate'] = $protein_rate;
+    $data['context']['fat_rate'] = $fat_rate;
+    $data['context']['recommended_calorie'] = $recommended_calorie;
+    $data['context']['eat_calorie'] = $eat_calorie;
+    $data['context']['remain_calorie'] = $remain_calorie;
+    $data['context']['eat_log'] = $eat_log;
     $data['alternate_intents'] = false;
     $json = json_encode($data, JSON_UNESCAPED_UNICODE);
 
@@ -266,7 +297,11 @@ else {
     // Responce the result.
     $raw = json_decode($result, true);
     $response = $raw['output']['text'][0];
-//응답하기
+    
+    //DB 닫기
+    mysqli_close($db);
+
+    //응답하기
 echo <<< EOD
     {
         "message": {
@@ -314,19 +349,10 @@ $carbo = array();
 $protein = array();
 $fat = array();
 
-$hostname02 = 'localhost';
-$username02 = 'root';
-$password02 = 'Dntjd13!';
-$dbname02 = 'dietbot';
-
-$db02 = new mysqli($hostname02,$username02,$password02,$dbname02);
-if ( $db02->connect_error ) exit('접속 실패 : '.$db02->connect_error);
-mysqli_query($db02,"set names utf8");   
-
 // 음식 별 칼로리 결과값 불러오기
 for($i=0;$i<count($f_name);$i++){
-  $sql = "SELECT * FROM foods where food_Name like "."'$f_name[$i]'";
-  $result02=mysqli_query($db02, $sql);
+  $sql02 = "SELECT * FROM foods where food_Name like "."'$f_name[$i]'";
+  $result02=mysqli_query($db, $sql02);
   $row02 = mysqli_fetch_array($result02);
   $cal[$i] = $f_number[$i]*$row02['food_Cal'];  //1인분 칼로리와 수량 곱하기
   // 음식 별 영양소 결과값 불러오기
@@ -349,35 +375,28 @@ for($j=0;$j<count($f_name);$j++){
 }
 $response = "기록되었습니다! 총 $cal_total 칼로리입니다! \\r\\n(".$response.")\\r\\n" ;
 
-$dateTime = new DateTime("now", new DateTimeZone('Asia/Seoul'));
-$time = $dateTime->format("Y-m-d H:i:s");
-
-//meals에 시간과 함께 아이템 별로 기록하기
+//meals DB에 시간과 함께 기록하기
 for($k=0;$k<count($f_name);$k++){
-  $meal_data = "INSERT INTO meals(user_key,food_id,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_id[$k]', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$time')";
-  $record=mysqli_query($db02, $meal_data);
+  $meal_data = "INSERT INTO meals(user_key,food_name,number,unit,cal,time) VALUES ('$user_key', '$f_name[$k]', '$f_number[$k]', '$f_unit[$k]','$cal[$k]','$time')";
+  mysqli_query($db, $meal_data);
 }
-
-// meals에 총 칼로리 기록하기
-$meal_total = "INSERT INTO meals(user_key,food_name,cal,time) VALUES ('$user_key', '메시지 별','$cal_total','$time')";
-mysqli_query($db02, $meal_total);
 
 //누적 칼로리, 영양소 user DB에 기록하기
 $add_Cal = "update users set eat_calorie = eat_calorie+$cal_total where user_key = '$user_key'";
-mysqli_query($db02, $add_Cal);
+mysqli_query($db, $add_Cal);
 $add_Carbo = "update users set eat_carbo = eat_carbo+$carbo_total where user_key = '$user_key'";
-mysqli_query($db02, $add_Carbo);
+mysqli_query($db, $add_Carbo);
 $add_Protein = "update users set eat_protein = eat_protein+$protein_total where user_key = '$user_key'";
-mysqli_query($db02, $add_Protein);
+mysqli_query($db, $add_Protein);
 $add_Fat = "update users set eat_fat = eat_fat+$fat_total where user_key = '$user_key'";
-mysqli_query($db02, $add_Fat);
+mysqli_query($db, $add_Fat);
 
 //남은 칼로리 계산해서 DB에 업로드하기
 $re_query = "select * from users where user_key='$user_key'";
-$row04 = mysqli_fetch_array(mysqli_query($db02,$re_query));
+$row04 = mysqli_fetch_array(mysqli_query($db,$re_query));
 $remain_calorie = $recommended_calorie-$row04['eat_calorie'];
 $remain = "update users set remain_calorie = $remain_calorie where user_key = '$user_key'";
-mysqli_query($db02, $remain);
+mysqli_query($db, $remain);
 
 // 열량 경고
 if($remain_calorie<0){
@@ -387,7 +406,7 @@ if($remain_calorie<0){
   $response = $response." 오늘 $remain_calorie 칼로리 남으셨네요 (씨익)";  
 }
 
-mysqli_close($db02);
+mysqli_close($db);
 
 //응답하기
 echo <<< EOD
