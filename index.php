@@ -1,5 +1,5 @@
 <?php
-$message = "통계 보여줘";
+$message = "고구마가 몇 칼로리야?";
 // $cal_rate = 40;
 // $carbo_rate = 30;
 // $protein_rate = 20;
@@ -11,12 +11,11 @@ $hostname = 'localhost';
 $username = 'root';
 $password = 'Dntjd13!';
 $dbname = 'dietbot';
-
-/*
 $db = new mysqli($hostname,$username,$password,$dbname);
 mysqli_query($db,"set names utf8");   
 if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 
+/*
 $eatlog_qry = "SELECT food_name, number, unit from meals where user_key = '$user_key' && time > CURDATE()";
 $eat_items = mysqli_query($db,$eatlog_qry);
 
@@ -68,7 +67,15 @@ curl_close($ch);
 // echo json_encode($result, JSON_UNESCAPED_UNICODE);
 // print_r($result);
 $raw = json_decode($result, true);
-print_r($raw['intents'][0]['intent']);
+// print_r($raw['entities'][0]['value']);
+
+$fooname = $raw['entities'][0]['value'];
+$cal_check = "SELECT * FROM foods where food_Name like "."'$fooname'";
+$result_cal = mysqli_query($db,$cal_check);
+$row_cal = mysqli_fetch_array($result_cal);
+$fooCal = $row_cal['food_Cal'];
+
+echo $fooCal;
 
 // print_r($raw);
 // $response = $raw['output']['text'][0];
