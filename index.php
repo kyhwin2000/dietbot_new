@@ -1,10 +1,15 @@
 <?php
-$message = "고구마가 몇 칼로리야?";
+$message = "귤";
 // $cal_rate = 40;
 // $carbo_rate = 30;
 // $protein_rate = 20;
 // $fat_rate = 10;
 $user_key = "UYcMwWLfIPlw";
+
+$f_item = array();
+$f_name = array();
+$f_number = array();
+$f_unit = array();
 
 //DB 연결
 $hostname = 'localhost';
@@ -39,19 +44,9 @@ $password = 'Z5HfbF6HKAtA';
 
 // Make a request message for Watson API in json.
 $data['input']['text'] = $message;
-// $data['context']['cal_rate'] = $cal_rate;
-// $data['context']['carbo_rate'] = $carbo_rate;
-// $data['context']['protein_rate'] = $protein_rate;
-// $data['context']['fat_rate'] = $fat_rate;
-// $data['context']['eat_log'] = $eat_text;
 $data['alternate_intents'] = false;
 $json = json_encode($data, JSON_UNESCAPED_UNICODE);
 
-// echo $json;
-// echo "<BR> <BR>";
-
-
-// Post the json to the Watson API via cURL.
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -62,20 +57,66 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
 curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
 $result = trim( curl_exec( $ch ) );
 curl_close($ch);
-
-// Responce the result.
-// echo json_encode($result, JSON_UNESCAPED_UNICODE);
-// print_r($result);
 $raw = json_decode($result, true);
-// print_r($raw['entities'][0]['value']);
 
-$fooname = $raw['entities'][0]['value'];
-$cal_check = "SELECT * FROM foods where food_Name like "."'$fooname'";
-$result_cal = mysqli_query($db,$cal_check);
-$row_cal = mysqli_fetch_array($result_cal);
-$fooCal = $row_cal['food_Cal'];
+$max = count($raw['entities']);
 
-echo $fooCal;
+for($i=0;$i<$max;$i++){
+	if($raw['entities'][$i]['entity']=="음식"){
+		// echo "wow <BR>";
+		array_push($f_name,$raw['entities'][$i]['value']);
+	}
+	if($raw['entities'][$i]['entity']=="단위"){
+		// echo "wow <BR>";
+		array_push($f_unit,$raw['entities'][$i]['value']);
+	}
+	if($raw['entities'][$i]['entity']=="sys-number"){
+		// echo "wow <BR>";
+		array_push($f_number,$raw['entities'][$i]['value']);
+	}
+
+}
+
+print_r($f_name);
+echo "<BR>";
+print_r($f_unit);
+echo "<BR>";
+print_r($f_number);
+echo "<BR>";
+
+// $num = 0;
+
+// for($i==0;$i<$max;$i++){
+// 	if($raw['entities'][$i]["음식"]!==""){
+// 		$num++;
+// 	}
+// }
+
+// echo $num;
+// echo $raw['entities'][0]['value'];
+// echo "<BR>";
+// echo $raw['entities'][2]['value'];
+// // echo "<BR>";
+// echo $raw['entities'][1]['value'];
+// echo "<BR>";
+// echo $raw['entities'][3]['value'];
+// echo "<BR>";
+// echo $raw['entities'][4]['value'];
+// echo "<BR>";
+// echo $raw['entities'][5]['value'];
+
+// echo "<BR>";
+// echo $f_name[1];
+
+
+
+// $fooname = $raw['entities'][0]['value'];
+// $cal_check = "SELECT * FROM foods where food_Name like "."'$fooname'";
+// $result_cal = mysqli_query($db,$cal_check);
+// $row_cal = mysqli_fetch_array($result_cal);
+// $fooCal = $row_cal['food_Cal'];
+
+// echo $fooCal;
 
 // print_r($raw);
 // $response = $raw['output']['text'][0];

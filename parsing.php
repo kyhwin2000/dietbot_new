@@ -27,40 +27,48 @@ $text = str_replace( ";" ,"",$text); //세미콜론
 $text = str_replace( "^^" ,"",$text); //웃음표시
 $text = str_replace( "~" ,"",$text); //물결표시
 
-// 음식 DB에서 자연어 검색
-$f_query = "SELECT food_Name, MATCH (food_Name)
-              AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
-              FROM foods WHERE MATCH (food_Name) AGAINST
-              ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
-$f_result=mysqli_query($db, $f_query);
-$pos = array();
-// DB와 매칭되는 음식명 문자열 위치 찾기
-while($f_row = mysqli_fetch_array($f_result)){
-  array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
-}      
-$pos = array_filter($pos,'is_numeric');
-sort($pos); 
+if(mb_strlen($text) < 3){
+  array_push($f_name,$text);
+  array_push($f_number,'1');
+  array_push($f_unit,'인분');
+} else {
+  // 음식 DB에서 자연어 검색
+  $f_query = "SELECT food_Name, MATCH (food_Name)
+                AGAINST ('$text' IN NATURAL LANGUAGE MODE) AS score
+                FROM foods WHERE MATCH (food_Name) AGAINST
+                ('$text' IN NATURAL LANGUAGE MODE) LIMIT 5";
+  $f_result=mysqli_query($db, $f_query);
+  $pos = array();
+  // DB와 매칭되는 음식명 문자열 위치 찾기
+  while($f_row = mysqli_fetch_array($f_result)){
+    array_push($pos,mb_strpos($text,$f_row['food_Name'],0,'UTF-8'));
+  }      
+  $pos = array_filter($pos,'is_numeric');
+  sort($pos); 
 
-// 음식명 문자열 위치부터 그 다음 음식명 문자열 위치까지 잘라서 아이템 분리하기
-for($q=0;$q<count($pos)-1;$q++){
-  array_push($f_item,mb_substr($text,$pos[$q],$pos[$q+1]-$pos[$q]));  
-}
-array_push($f_item,mb_substr($text,$pos[count($pos)-1],strlen($text)-$pos[count($pos)-1]));
+  // 음식명 문자열 위치부터 그 다음 음식명 문자열 위치까지 잘라서 아이템 분리하기
+  for($q=0;$q<count($pos)-1;$q++){
+    array_push($f_item,mb_substr($text,$pos[$q],$pos[$q+1]-$pos[$q]));  
+  }
+  array_push($f_item,mb_substr($text,$pos[count($pos)-1],strlen($text)-$pos[count($pos)-1]));
 
-// 한 아이템마다 함수에 던져서 음식명, 섭취량, 단위 추출하기
-for($r=0;$r<count($f_item);$r++){
-  array_push($f_name,parseText($f_item[$r])[0]);
-  if(parseText($f_item[$r])[1]==""){ 
-    array_push($f_number,'1');
-  } else {
-    array_push($f_number,parseText($f_item[$r])[1]);  
+  // 한 아이템마다 함수에 던져서 음식명, 섭취량, 단위 추출하기
+  for($r=0;$r<count($f_item);$r++){
+    array_push($f_name,parseText($f_item[$r])[0]);
+    if(parseText($f_item[$r])[1]==""){ 
+      array_push($f_number,'1');
+    } else {
+      array_push($f_number,parseText($f_item[$r])[1]);  
+    }
+    if(parseText($f_item[$r])[2]==""){ 
+      array_push($f_unit,'인분');
+    } else {
+      array_push($f_unit,parseText($f_item[$r])[2]);  
+    }
   }
-  if(parseText($f_item[$r])[2]==""){ 
-    array_push($f_unit,'인분');
-  } else {
-    array_push($f_unit,parseText($f_item[$r])[2]);  
-  }
+
 }
+
 
 
 function parseText($text){
