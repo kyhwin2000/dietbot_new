@@ -20,6 +20,10 @@ $db = new mysqli($hostname,$username,$password,$dbname);
 mysqli_query($db,"set names utf8");   
 if ( $db->connect_error ) exit('접속 실패 : '.$db->connect_error);
 
+$raw = send_watson($message);
+$num_entity = count($raw['entities']);
+echo $num_entity;
+
 /*
 $eatlog_qry = "SELECT food_name, number, unit from meals where user_key = '$user_key' && time > CURDATE()";
 $eat_items = mysqli_query($db,$eatlog_qry);
@@ -33,32 +37,40 @@ echo $eat_text;
 echo "<BR>";
 */
 // 
-// Unique identifier of the workspace.
-$workspace_id = '2f2619f4-b142-4e4c-a238-fb211e746dd9';
-// Release date of the API version in YYYY-MM-DD format.
-$release_date = '2017-10-24';
-// Username of a user for the service credentials.
-$username = '04ebe333-2a50-4e3a-9b09-b9a532d3b3ca';
-// Password of a user for the service credentials.
-$password = 'Z5HfbF6HKAtA';
 
-// Make a request message for Watson API in json.
-$data['input']['text'] = $message;
-$data['alternate_intents'] = false;
-$json = json_encode($data, JSON_UNESCAPED_UNICODE);
+$intent = check_intent($message);
+echo $intent;
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL, 'https://watson-api-explorer.mybluemix.net/conversation/api/v1/workspaces/'.$workspace_id.'/message?version='.$release_date);
-curl_setopt($ch, CURLOPT_USERPWD, $username.":".$password);
-curl_setopt($ch, CURLOPT_POST, true );
-curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
-$result = trim( curl_exec( $ch ) );
-curl_close($ch);
-$raw = json_decode($result, true);
+function send_watson($text){
+  // 왓슨 대화 API로 보내서 처리하기
+  $workspace_id = '2f2619f4-b142-4e4c-a238-fb211e746dd9';
+  $release_date = '2017-10-24';
+  $username = '04ebe333-2a50-4e3a-9b09-b9a532d3b3ca';
+  $password = 'Z5HfbF6HKAtA';
 
+  // 인텐트 파악을 위해 왓슨에 던지기
+  $data['input']['text'] = $text;
+  $data['context']['user_key'] = $user_key;
+  $data['alternate_intents'] = false;
+  $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+  // Post the json to the Watson API via cURL.
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_URL, 'https://watson-api-explorer.mybluemix.net/conversation/api/v1/workspaces/'.$workspace_id.'/message?version='.$release_date);
+  curl_setopt($ch, CURLOPT_USERPWD, $username.":".$password);
+  curl_setopt($ch, CURLOPT_POST, true );
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+  $result = trim( curl_exec( $ch ) );
+  curl_close($ch);
+  // Responce the result.
+  $raw = json_decode($result, true);
+  // $intent = $raw['intents'][0]['intent'];
+  return $raw;
+}
+
+/*
 $max = count($raw['entities']);
 
 for($i=0;$i<$max;$i++){
